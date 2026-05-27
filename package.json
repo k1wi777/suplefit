@@ -1,0 +1,18 @@
+{
+  "name": "suplefit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SupleFit - prototipo web de recomendaciones de suplementos",
+  "scripts": {
+    "dev:api": "pnpm --dir apps/api dev",
+    "dev:web": "pnpm --dir apps/web dev",
+    "build:api": "pnpm --dir apps/api build",
+    "build:web": "pnpm --dir apps/web build",
+    "start:api": "pnpm --dir apps/api start",
+    "start:web": "pnpm --dir apps/web start",
+    "seed": "pnpm --dir apps/api seed"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
