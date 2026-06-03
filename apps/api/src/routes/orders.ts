@@ -1,0 +1,134 @@
+import type { Request, Response, Router } from "express";
+import { Router as expressRouter } from "express";
+import { z } from "zod";
+import { pool, query } from "../lib/db";
+import { requireAuth } from "../middleware/auth";
+
+const router: Router = expressRouter();
+
+const CreateOrderSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        supplementId: z.coerce.number().int().positive(),
+        cantidad: z.coerce.number().int().min(1).max(99),
+      })
+    )
+    .min(1)
+    .max(50),
+});
+
+router.post("/", requireAuth, async (req: Request, res: Response) => {
+  const parsed = CreateOrderSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Datos de pedido inválidos", details: parsed.error.flatten() });
+  }
+
+  const userId = req.user!.userId;
+  const { items } = parsed.data;
+
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    let total = 0;
+    const lineItems: Array<{ supplementId: number; cantidad: number; precioUnitario: number }> = [];
+
+    for (const line of items) {
+      const [rows] = await conn.query<any[]>(
+        `SELECT id, nombre, precio, stock FROM suplementos WHERE id = ? FOR UPDATE`,
+        [line.supplementId]
+      );
+      const supp = rows[0];
+      if (!supp) {
+        await conn.rollback();
+        return res.status(400).json({ error: `Producto ${line.supplementId} no encontrado` });
+      }
+      if (supp.stock < line.cantidad) {
+        await conn.rollback();
+        return res.status(400).json({
+          error: `Stock insuficiente para "${supp.nombre}" (disponible: ${supp.stock})`,
+        });
+      }
+      const precioUnitario = Number(supp.precio);
+      total += precioUnitario * line.cantidad;
+      lineItems.push({
+        supplementId: line.supplementId,
+        cantidad: line.cantidad,
+        precioUnitario,
+      });
+    }
+
+    const [orderResult] = await conn.query<any>(
+      `INSERT INTO pedidos (user_id, estado, total) VALUES (?, 'pendiente', ?)`,
+      [userId, total]
+    );
+    const pedidoId = orderResult.insertId as number;
+
+    for (const line of lineItems) {
+      await conn.query(
+        `INSERT INTO pedido_items (pedido_id, supplement_id, cantidad, precio_unitario) VALUES (?, ?, ?, ?)`,
+        [pedidoId, line.supplementId, line.cantidad, line.precioUnitario]
+      );
+    }
+
+    await conn.commit();
+
+    const order = await query<any>(
+      `SELECT id, user_id, estado, total, created_at FROM pedidos WHERE id = ?`,
+      [pedidoId]
+    );
+    const orderItems = await query<any>(
+      `
+        SELECT pi.*, s.nombre AS supplementNombre
+        FROM pedido_items pi
+        JOIN suplementos s ON s.id = pi.supplement_id
+        WHERE pi.pedido_id = ?
+      `,
+      [pedidoId]
+    );
+
+    return res.status(201).json({ order: order[0], items: orderItems });
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+});
+
+router.get("/", requireAuth, async (req: Request, res: Response) => {
+  const userId = req.user!.userId;
+  const orders = await query<any>(
+    `SELECT id, estado, total, created_at FROM pedidos WHERE user_id = ? ORDER BY created_at DESC`,
+    [userId]
+  );
+  return res.json({ orders });
+});
+
+router.get("/:id", requireAuth, async (req: Request, res: Response) => {
+  const userId = req.user!.userId;
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) return res.status(400).json({ error: "ID inválido" });
+
+  const orders = await query<any>(
+    `SELECT id, user_id, estado, total, created_at FROM pedidos WHERE id = ? AND user_id = ?`,
+    [id, userId]
+  );
+  const order = orders[0];
+  if (!order) return res.status(404).json({ error: "Pedido no encontrado" });
+
+  const items = await query<any>(
+    `
+      SELECT pi.*, s.nombre AS supplementNombre, s.imagen_url AS supplementImagen
+      FROM pedido_items pi
+      JOIN suplementos s ON s.id = pi.supplement_id
+      WHERE pi.pedido_id = ?
+    `,
+    [id]
+  );
+
+  return res.json({ order, items });
+});
+
+export default router;

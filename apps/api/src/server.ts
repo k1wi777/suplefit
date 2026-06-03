@@ -6,6 +6,8 @@ import usersRouter from "./routes/users";
 import supplementsRouter from "./routes/supplements";
 import recommendationsRouter from "./routes/recommendations";
 import adminRouter from "./routes/admin";
+import ordersRouter from "./routes/orders";
+import trackingRouter from "./routes/tracking";
 import { seedDemoIfNeeded } from "./seed";
 
 async function main() {
@@ -30,6 +32,8 @@ async function main() {
   app.use("/api/supplements", supplementsRouter);
   app.use("/api/recommendations", recommendationsRouter);
   app.use("/api/admin", adminRouter);
+  app.use("/api/orders", ordersRouter);
+  app.use("/api/tracking", trackingRouter);
 
   // Fallback 404
   app.use((_req, res) => res.status(404).json({ error: "Not found" }));

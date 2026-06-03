@@ -1,5 +1,10 @@
 import { query } from "./db";
-import { objetivoToCategorySlugs, type Objetivo } from "./recommendationRules";
+import {
+  highStimSlugs,
+  objetivoLabels,
+  objetivoToCategorySlugs,
+  type Objetivo,
+} from "./recommendationRules";
 
 export type Supplement = {
   id: number;
@@ -21,17 +26,33 @@ function buildInClause(values: string[]) {
   return { placeholders, params: values };
 }
 
-export async function generateAndFetchRecommendationsForUser(userId: number, objetivo: string) {
+export async function generateAndFetchRecommendationsForUser(
+  userId: number,
+  objetivo: string,
+  nivelActividad?: string
+) {
   const mappedObjetivo = objetivoToCategorySlugs[objetivo] ? (objetivo as Objetivo) : null;
   if (!mappedObjetivo) {
-    // Sin mapeo: devolvemos lista vacía para prototipo.
-    return { items: [] as Supplement[] };
+    return {
+      items: [] as Supplement[],
+      criterios: {
+        objetivo,
+        objetivoLabel: null,
+        categorias: [] as string[],
+        nivelActividad: nivelActividad ?? null,
+        notas: ["Objetivo sin mapeo de categorías configurado."],
+      },
+    };
   }
 
-  const slugs = objetivoToCategorySlugs[mappedObjetivo];
+  let slugs = [...objetivoToCategorySlugs[mappedObjetivo]];
+  const sedentary = ["sedentario", "baja", "media"].includes((nivelActividad ?? "").toLowerCase());
+  if (sedentary) {
+    slugs = slugs.filter((s) => !highStimSlugs.includes(s));
+  }
+
   const { placeholders, params } = buildInClause(slugs);
 
-  // Evita duplicados evidentes: regenerar dentro del mismo día para el mismo objetivo.
   await query("DELETE FROM recomendaciones WHERE user_id = ? AND objetivo = ? AND created_at >= (NOW() - INTERVAL 1 DAY)", [
     userId,
     mappedObjetivo,
@@ -56,6 +77,24 @@ export async function generateAndFetchRecommendationsForUser(userId: number, obj
     );
   }
 
-  return { items: recommendedSupplements };
+  const notas = [
+    "Sugerencias orientativas basadas en reglas, no diagnóstico médico.",
+    "Se priorizan productos con stock disponible y precio accesible.",
+    `Objetivo: ${objetivoLabels[mappedObjetivo]}.`,
+  ];
+  if (sedentary) {
+    notas.push("Nivel de actividad bajo o moderado: se omiten pre-entrenos y estimulantes fuertes.");
+  }
+
+  return {
+    items: recommendedSupplements,
+    criterios: {
+      objetivo: mappedObjetivo,
+      objetivoLabel: objetivoLabels[mappedObjetivo],
+      categorias: slugs,
+      nivelActividad: nivelActividad ?? null,
+      notas,
+    },
+  };
 }
 

@@ -25,13 +25,17 @@ const RegisterSchema = z.object({
     "definicion",
     "rendimiento",
   ]),
+  consentimientoDatos: z.literal(true),
+  politicaVersion: z.string().max(20).optional(),
 });
 
 router.post("/register", async (req: Request, res: Response) => {
   const parsed = RegisterSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
-  const { nombre, correo, password, edad, peso, altura, sexo, nivelActividad, objetivo } = parsed.data;
+  const { nombre, correo, password, edad, peso, altura, sexo, nivelActividad, objetivo, politicaVersion } =
+    parsed.data;
+  const version = politicaVersion ?? "1.0";
 
   const existing = await query<{ id: number }>("SELECT id FROM usuarios WHERE correo = ? LIMIT 1", [correo]);
   if (existing.length) return res.status(409).json({ error: "Correo ya registrado" });
@@ -41,15 +45,23 @@ router.post("/register", async (req: Request, res: Response) => {
   await query<any>(
     `
       INSERT INTO usuarios
-        (nombre, correo, password_hash, edad, peso, altura, sexo, nivel_actividad, objetivo)
+        (nombre, correo, password_hash, edad, peso, altura, sexo, nivel_actividad, objetivo,
+         consentimiento_datos, consentimiento_fecha, politica_version)
       VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), ?)
     `,
-    [nombre, correo, password_hash, edad, peso, altura, sexo, nivelActividad, objetivo]
+    [nombre, correo, password_hash, edad, peso, altura, sexo, nivelActividad, objetivo, version]
   );
   const user = await query<any>("SELECT id, nombre, correo, objetivo FROM usuarios WHERE correo = ? LIMIT 1", [
     correo,
   ]);
+  const userId = user[0]?.id as number | undefined;
+  if (userId) {
+    await query(
+      `INSERT INTO seguimiento_peso (user_id, peso, registrado_en) VALUES (?, ?, CURDATE())`,
+      [userId, peso]
+    );
+  }
 
   return res.status(201).json({ user: user[0] });
 });

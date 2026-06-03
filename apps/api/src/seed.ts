@@ -1,13 +1,14 @@
 import bcrypt from "bcryptjs";
 import { env } from "./lib/env";
 import { query } from "./lib/db";
+import { supplementContentBySlug } from "./seedSupplementContent";
 
 export const categories = [
   { nombre: "Creatina", slug: "creatina" },
   { nombre: "Whey Protein", slug: "whey-protein" },
   { nombre: "Mass Gainer", slug: "mass-gainer" },
   { nombre: "L-Carnitina", slug: "l-carnitina" },
-  { nombre: "Quemadores", slug: "quemadores" },
+  { nombre: "Soporte nutricional", slug: "soporte-nutricional" },
   { nombre: "Proteína Aislada", slug: "proteina-aislada" },
   { nombre: "Electrolitos", slug: "electrolitos" },
   { nombre: "BCAA", slug: "bcaa" },
@@ -68,10 +69,10 @@ export const supplements = [
     stock: 25,
   },
   {
-    nombre: "Quemador de Grasa",
-    categoriaSlug: "quemadores",
-    descripcion: "Complemento para reforzar rutinas de definición.",
-    beneficios: "Mayor enfoque y soporte de energía.",
+    nombre: "Complemento de soporte nutricional",
+    categoriaSlug: "soporte-nutricional",
+    descripcion: "Complemento deportivo para apoyar tu plan de entrenamiento y nutrición.",
+    beneficios: "Soporte de energía y enfoque en rutinas activas.",
     modoUso: "Según indicación del producto.",
     advertencias: "No combinar con exceso de estimulantes.",
     imagenUrl: "https://fitnesspeople.com.co/cdn/shop/products/0005121_fit-9-sascha-fitness-120-cps.jpg?v=1699727703&width=533",
@@ -212,6 +213,20 @@ export const supplements = [
   }
 ];
 
+export async function refreshSupplementContent() {
+  for (const [slug, extra] of Object.entries(supplementContentBySlug)) {
+    await query<any>(
+      `
+        UPDATE suplementos s
+        INNER JOIN categorias c ON c.id = s.categoria_id
+        SET s.beneficios = ?, s.modo_uso = ?, s.advertencias = ?
+        WHERE c.slug = ?
+      `,
+      [extra.beneficios, extra.modoUso, extra.advertencias, slug]
+    );
+  }
+}
+
 export async function seedDemoIfNeeded() {
   // Categorías
   const catCount = await query<any>("SELECT COUNT(*) as count FROM categorias");
@@ -234,6 +249,7 @@ export async function seedDemoIfNeeded() {
       const catId = cat[0]?.id;
       if (!catId) continue;
 
+      const extra = supplementContentBySlug[s.categoriaSlug];
       await query<any>(
         `
           INSERT INTO suplementos
@@ -244,9 +260,9 @@ export async function seedDemoIfNeeded() {
         [
           s.nombre,
           s.descripcion,
-          s.beneficios,
-          s.modoUso,
-          s.advertencias,
+          extra?.beneficios ?? s.beneficios,
+          extra?.modoUso ?? s.modoUso,
+          extra?.advertencias ?? s.advertencias,
           s.imagenUrl,
           catId,
           s.precio,
@@ -254,6 +270,11 @@ export async function seedDemoIfNeeded() {
         ]
       );
     }
+  }
+
+  const supAfter = await query<any>("SELECT COUNT(*) as count FROM suplementos");
+  if (Number(supAfter[0]?.count ?? 0) > 0) {
+    await refreshSupplementContent();
   }
 
   // Admin (usuario + tabla administradores)
@@ -265,8 +286,11 @@ export async function seedDemoIfNeeded() {
       const password_hash = await bcrypt.hash(env.ADMIN_PASSWORD, 10);
       await query<any>(
         `
-          INSERT INTO usuarios (nombre, correo, password_hash, edad, peso, altura, sexo, nivel_actividad, objetivo)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO usuarios (
+            nombre, correo, password_hash, edad, peso, altura, sexo, nivel_actividad, objetivo,
+            consentimiento_datos, consentimiento_fecha, politica_version
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), '1.0')
         `,
         ["Admin SupleFit", env.ADMIN_EMAIL, password_hash, 30, 75, 1.75, "M", "alta", "definicion"]
       );
@@ -279,7 +303,32 @@ export async function seedDemoIfNeeded() {
         "INSERT INTO administradores (user_id) VALUES (?) ON DUPLICATE KEY UPDATE user_id = VALUES(user_id)",
         [userId]
       );
+      const pesoHist = await query<any>(
+        "SELECT id FROM seguimiento_peso WHERE user_id = ? LIMIT 1",
+        [userId]
+      );
+      if (!pesoHist.length) {
+        await query<any>(
+          `INSERT INTO seguimiento_peso (user_id, peso, registrado_en) VALUES (?, 75, CURDATE())`,
+          [userId]
+        );
+      }
     }
   }
+}
+
+async function runSeedCli() {
+  await seedDemoIfNeeded();
+  // eslint-disable-next-line no-console
+  console.log("Seed completado.");
+  process.exit(0);
+}
+
+if (require.main === module) {
+  runSeedCli().catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error("Seed error:", err);
+    process.exit(1);
+  });
 }
 

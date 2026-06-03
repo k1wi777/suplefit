@@ -69,5 +69,20 @@ router.put("/profile", requireAuth, async (req: Request, res: Response) => {
   return res.json({ user: updated[0] });
 });
 
+router.delete("/profile", requireAuth, async (req: Request, res: Response) => {
+  const userId = req.user!.userId;
+  const pedidos = await query<{ id: number }>("SELECT id FROM pedidos WHERE user_id = ?", [userId]);
+  for (const p of pedidos) {
+    await query("DELETE FROM pedido_items WHERE pedido_id = ?", [p.id]);
+  }
+  await query("DELETE FROM pedidos WHERE user_id = ?", [userId]);
+  await query("DELETE FROM recomendaciones WHERE user_id = ?", [userId]);
+  await query("DELETE FROM seguimiento_peso WHERE user_id = ?", [userId]);
+  await query("DELETE FROM habitos_diarios WHERE user_id = ?", [userId]);
+  await query("DELETE FROM administradores WHERE user_id = ?", [userId]);
+  await query("DELETE FROM usuarios WHERE id = ?", [userId]);
+  return res.json({ ok: true });
+});
+
 export default router;
 

@@ -10,7 +10,8 @@
     "build:web": "pnpm --dir apps/web build",
     "start:api": "pnpm --dir apps/api start",
     "start:web": "pnpm --dir apps/web start",
-    "seed": "pnpm --dir apps/api seed"
+    "seed": "pnpm --dir apps/api seed",
+    "db:reset": "pnpm --dir apps/api db:reset"
   },
   "engines": {
     "node": ">=18"

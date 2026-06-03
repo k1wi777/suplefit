@@ -9,12 +9,19 @@ const router: Router = expressRouter();
 router.get("/", requireAuth, async (req: Request, res: Response) => {
   const userId = req.user!.userId;
 
-  const rows = await query<any>("SELECT objetivo FROM usuarios WHERE id = ? LIMIT 1", [userId]);
+  const rows = await query<any>(
+    "SELECT objetivo, nivel_actividad FROM usuarios WHERE id = ? LIMIT 1",
+    [userId]
+  );
   const user = rows[0];
   if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
 
-  const { items } = await generateAndFetchRecommendationsForUser(userId, user.objetivo);
-  return res.json({ items });
+  const result = await generateAndFetchRecommendationsForUser(
+    userId,
+    user.objetivo,
+    user.nivel_actividad
+  );
+  return res.json(result);
 });
 
 router.get("/history", requireAuth, async (req: Request, res: Response) => {
