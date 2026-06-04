@@ -101,8 +101,8 @@ export default function RegisterPage() {
                 },
               });
               router.push("/login");
-            } catch (err: any) {
-              setError(err?.message ?? "Error al registrar");
+            } catch (err: unknown) {
+              setError(err instanceof Error ? err.message : "Error al registrar");
             } finally {
               setLoading(false);
             }

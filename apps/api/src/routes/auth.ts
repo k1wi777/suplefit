@@ -31,7 +31,12 @@ const RegisterSchema = z.object({
 
 router.post("/register", async (req: Request, res: Response) => {
   const parsed = RegisterSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  if (!parsed.success) {
+    const msg = parsed.error.issues
+      .map((i) => `${i.path.join(".") || "datos"}: ${i.message}`)
+      .join("; ");
+    return res.status(400).json({ error: msg || "Datos de registro inválidos" });
+  }
 
   const { nombre, correo, password, edad, peso, altura, sexo, nivelActividad, objetivo, politicaVersion } =
     parsed.data;
@@ -42,29 +47,36 @@ router.post("/register", async (req: Request, res: Response) => {
 
   const password_hash = await bcrypt.hash(password, 10);
 
-  const { p_user_id: rawUserId } = await callProcedure(
-    "sp_registrar_usuario",
-    [
-      nombre,
-      correo,
-      password_hash,
-      edad,
-      peso,
-      altura,
-      sexo,
-      nivelActividad,
-      objetivo,
-      version,
-    ],
-    ["p_user_id"]
-  );
-  const userId = Number(rawUserId);
-  const user = await query<any>(
-    "SELECT id, nombre, correo, objetivo FROM usuarios WHERE id = ? LIMIT 1",
-    [userId]
-  );
-
-  return res.status(201).json({ user: user[0] });
+  try {
+    const { p_user_id: rawUserId } = await callProcedure(
+      "sp_registrar_usuario",
+      [
+        nombre,
+        correo,
+        password_hash,
+        edad,
+        peso,
+        altura,
+        sexo,
+        nivelActividad,
+        objetivo,
+        version,
+      ],
+      ["p_user_id"]
+    );
+    const userId = Number(rawUserId);
+    if (!Number.isFinite(userId)) {
+      return res.status(500).json({ error: "No se pudo crear el usuario" });
+    }
+    const user = await query<any>(
+      "SELECT id, nombre, correo, objetivo FROM usuarios WHERE id = ? LIMIT 1",
+      [userId]
+    );
+    return res.status(201).json({ user: user[0] });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Error al registrar usuario";
+    return res.status(500).json({ error: message });
+  }
 });
 
 const LoginSchema = z.object({
