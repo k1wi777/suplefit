@@ -1,0 +1,216 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Fondo premium dark + brillos sutiles */
+@media (prefers-color-scheme: dark) {
+  body {
+    background: radial-gradient(1000px 600px at 10% 0%, rgba(0, 255, 180, 0.12), transparent 50%),
+      radial-gradient(900px 600px at 90% 10%, rgba(0, 120, 255, 0.12), transparent 45%),
+      linear-gradient(180deg, #050505 0%, #0b0b0b 60%, #060606 100%);
+  }
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    0 18px 60px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.glass-strong {
+  background: rgba(10, 10, 10, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow:
+    0 22px 70px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+/* Ficha de suplemento — gradientes tipo spotlight (referencia UI) */
+.panel-gradient-benefits {
+  background:
+    radial-gradient(ellipse 120% 90% at 0% -20%, rgba(186, 255, 46, 0.2) 0%, transparent 55%),
+    linear-gradient(145deg, rgba(186, 255, 46, 0.07) 0%, transparent 42%, #0c0c0c 100%);
+}
+
+.panel-gradient-protocol {
+  background:
+    radial-gradient(ellipse 100% 70% at 100% 0%, rgba(186, 255, 46, 0.14) 0%, transparent 50%),
+    linear-gradient(180deg, #181818 0%, #0a0a0a 100%);
+}
+
+.panel-gradient-safety {
+  background:
+    radial-gradient(ellipse 90% 60% at 50% -30%, rgba(255, 255, 255, 0.07) 0%, transparent 50%),
+    linear-gradient(180deg, #161616 0%, #0a0a0a 100%);
+}
+
+.panel-subcard-lime {
+  background:
+    radial-gradient(ellipse 110% 85% at 50% -15%, rgba(186, 255, 46, 0.14) 0%, transparent 55%),
+    linear-gradient(180deg, #161616 0%, #0a0a0a 100%);
+}
+
+.panel-subcard-alert {
+  background:
+    radial-gradient(ellipse 110% 85% at 50% -15%, rgba(248, 113, 113, 0.26) 0%, transparent 55%),
+    linear-gradient(180deg, #1a1212 0%, #0c0a0a 100%);
+}
+
+.panel-gradient-admin-form {
+  background:
+    radial-gradient(ellipse 100% 80% at 0% -10%, rgba(186, 255, 46, 0.16) 0%, transparent 50%),
+    linear-gradient(180deg, #161616 0%, #0a0a0a 100%);
+}
+
+.panel-gradient-admin-catalog {
+  background:
+    radial-gradient(ellipse 90% 70% at 100% 0%, rgba(186, 255, 46, 0.1) 0%, transparent 45%),
+    linear-gradient(180deg, #141414 0%, #080808 100%);
+}
+
+.admin-product-card {
+  background:
+    radial-gradient(ellipse 100% 70% at 50% -20%, rgba(186, 255, 46, 0.08) 0%, transparent 50%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+.admin-input {
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 0.875rem 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+
+.admin-input:focus {
+  border-color: rgba(186, 255, 46, 0.45);
+}
+
+.neon-text {
+  color: #baff2e;
+  text-shadow:
+    0 0 12px rgba(186, 255, 46, 0.42),
+    0 0 28px rgba(186, 255, 46, 0.25);
+}
+
+.neon-btn {
+  background: linear-gradient(180deg, #c6ff2d 0%, #a6e513 100%);
+  color: #101410;
+  font-weight: 700;
+  box-shadow:
+    0 10px 30px rgba(171, 236, 39, 0.25),
+    0 0 0 1px rgba(220, 255, 130, 0.35) inset;
+}
+
+.neon-btn:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 16px 34px rgba(171, 236, 39, 0.3),
+    0 0 0 1px rgba(220, 255, 130, 0.45) inset;
+}
+
+.card-hover {
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: rgba(186, 255, 46, 0.45);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
+}
+
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  opacity: 0;
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-400 { animation-delay: 400ms; }
+
+/* Scrollbar premium — SupleFit (formularios, perfil, admin) */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(186, 255, 46, 0.5) rgba(255, 255, 255, 0.05);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+  margin: 4px 0;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(186, 255, 46, 0.65) 0%,
+    rgba(186, 255, 46, 0.28) 100%
+  );
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(212, 255, 99, 0.85) 0%,
+    rgba(186, 255, 46, 0.45) 100%
+  );
+  background-clip: padding-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+html.custom-scrollbar,
+html.custom-scrollbar body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(186, 255, 46, 0.4) rgba(10, 10, 10, 0.9);
+}
+

@@ -383,6 +383,10 @@ Endpoints nuevos ligados a rutinas: `GET /api/admin/stats`, `POST /api/admin/ord
 
 Configuración automática: `apps/api/railway.toml`, migraciones en pre-deploy y guía paso a paso en **[`docs/RAILWAY.md`](docs/RAILWAY.md)**.
 
+### Despliegue en Vercel (frontend Next.js)
+
+El frontend está en `apps/web` dentro del monorepo (no es submódulo). En Vercel, **Root Directory** = `apps/web`. Guía: **[`docs/VERCEL.md`](docs/VERCEL.md)**.
+
 ---
 
 ## Lógica de negocio (resumen)
