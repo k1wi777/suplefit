@@ -17,18 +17,21 @@ if ! command -v mysql >/dev/null 2>&1; then
   exit 1
 fi
 
-MYSQL=(mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" "-p${DB_PASSWORD}" --default-character-set=utf8mb4)
+mysql_cmd() {
+  mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" "-p${DB_PASSWORD}" \
+    --default-character-set=utf8mb4 "$@"
+}
 
 echo "→ Conectando a ${DB_HOST}:${DB_PORT}/${DB_NAME} ..."
-"${MYSQL[@]}" -e "SELECT 1" "$DB_NAME" >/dev/null
+mysql_cmd -e "SELECT 1" "$DB_NAME" >/dev/null
 
 echo "→ Aplicando db/schema.sql"
-"${MYSQL[@]}" "$DB_NAME" < db/schema.sql
+mysql_cmd "$DB_NAME" < db/schema.sql
 
 echo "→ Aplicando db/migrations/003_stored_routines.sql"
-"${MYSQL[@]}" "$DB_NAME" < db/migrations/003_stored_routines.sql
+mysql_cmd "$DB_NAME" < db/migrations/003_stored_routines.sql
 
 echo "→ Aplicando db/migrations/004_collation_unicode.sql"
-"${MYSQL[@]}" "$DB_NAME" < db/migrations/004_collation_unicode.sql
+mysql_cmd "$DB_NAME" < db/migrations/004_collation_unicode.sql
 
 echo "✓ Migraciones Railway completadas."
