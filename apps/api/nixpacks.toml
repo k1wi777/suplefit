@@ -1,3 +1,3 @@
 # Cliente mysql para ejecutar migraciones SQL (DELIMITER en 003_stored_routines.sql)
 [phases.setup]
-aptPkgs = ["default-mysql-client", "mariadb-client"]
+aptPkgs = ["default-mysql-client"]

@@ -13,7 +13,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 if ! command -v mysql >/dev/null 2>&1; then
-  echo "✗ Cliente mysql no encontrado. Añade nixpacks.toml con mariadb-client."
+  echo "✗ Cliente mysql no encontrado. Añade nixpacks.toml con default-mysql-client."
   exit 1
 fi
 
