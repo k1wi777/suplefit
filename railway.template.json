@@ -1,0 +1,44 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "name": "SupleFit (API + MySQL)",
+  "description": "Backend Express con MySQL, migraciones automáticas y procedimientos almacenados.",
+  "services": {
+    "SupleFit API": {
+      "source": {
+        "repo": ".",
+        "rootDirectory": "/apps/api"
+      },
+      "build": {
+        "builder": "NIXPACKS",
+        "buildCommand": "npm install && npm run build",
+        "watchPatterns": ["/apps/api/**"]
+      },
+      "deploy": {
+        "preDeployCommand": "sh scripts/railway-migrate.sh",
+        "startCommand": "node dist/server.js",
+        "healthcheckPath": "/health",
+        "healthcheckTimeout": 120,
+        "restartPolicyType": "ON_FAILURE"
+      },
+      "variables": {
+        "DB_HOST": "${{MySQL.MYSQLHOST}}",
+        "DB_PORT": "${{MySQL.MYSQLPORT}}",
+        "DB_USER": "${{MySQL.MYSQLUSER}}",
+        "DB_PASSWORD": "${{MySQL.MYSQLPASSWORD}}",
+        "DB_NAME": "${{MySQL.MYSQLDATABASE}}",
+        "DB_SSL": "1",
+        "JWT_SECRET": "${{secret(JWT_SECRET)}}",
+        "JWT_EXPIRES_IN": "7d",
+        "CORS_ORIGIN": "http://localhost:3000",
+        "SEED_DEMO": "1",
+        "ADMIN_EMAIL": "admin@suplefit.com",
+        "ADMIN_PASSWORD": "${{secret(ADMIN_PASSWORD)}}"
+      }
+    }
+  },
+  "plugins": {
+    "MySQL": {
+      "plugin": "mysql"
+    }
+  }
+}

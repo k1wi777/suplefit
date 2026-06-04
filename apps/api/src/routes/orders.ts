@@ -1,7 +1,7 @@
 import type { Request, Response, Router } from "express";
 import { Router as expressRouter } from "express";
 import { z } from "zod";
-import { pool, query } from "../lib/db";
+import { callProcedure, query } from "../lib/db";
 import { requireAuth } from "../middleware/auth";
 
 const router: Router = expressRouter();
@@ -25,76 +25,34 @@ router.post("/", requireAuth, async (req: Request, res: Response) => {
   }
 
   const userId = req.user!.userId;
-  const { items } = parsed.data;
+  const itemsJson = JSON.stringify(parsed.data.items);
 
-  const conn = await pool.getConnection();
-  try {
-    await conn.beginTransaction();
+  const out = await callProcedure("sp_crear_pedido", [userId, itemsJson], ["p_pedido_id", "p_error"]);
 
-    let total = 0;
-    const lineItems: Array<{ supplementId: number; cantidad: number; precioUnitario: number }> = [];
-
-    for (const line of items) {
-      const [rows] = await conn.query<any[]>(
-        `SELECT id, nombre, precio, stock FROM suplementos WHERE id = ? FOR UPDATE`,
-        [line.supplementId]
-      );
-      const supp = rows[0];
-      if (!supp) {
-        await conn.rollback();
-        return res.status(400).json({ error: `Producto ${line.supplementId} no encontrado` });
-      }
-      if (supp.stock < line.cantidad) {
-        await conn.rollback();
-        return res.status(400).json({
-          error: `Stock insuficiente para "${supp.nombre}" (disponible: ${supp.stock})`,
-        });
-      }
-      const precioUnitario = Number(supp.precio);
-      total += precioUnitario * line.cantidad;
-      lineItems.push({
-        supplementId: line.supplementId,
-        cantidad: line.cantidad,
-        precioUnitario,
-      });
-    }
-
-    const [orderResult] = await conn.query<any>(
-      `INSERT INTO pedidos (user_id, estado, total) VALUES (?, 'pendiente', ?)`,
-      [userId, total]
-    );
-    const pedidoId = orderResult.insertId as number;
-
-    for (const line of lineItems) {
-      await conn.query(
-        `INSERT INTO pedido_items (pedido_id, supplement_id, cantidad, precio_unitario) VALUES (?, ?, ?, ?)`,
-        [pedidoId, line.supplementId, line.cantidad, line.precioUnitario]
-      );
-    }
-
-    await conn.commit();
-
-    const order = await query<any>(
-      `SELECT id, user_id, estado, total, created_at FROM pedidos WHERE id = ?`,
-      [pedidoId]
-    );
-    const orderItems = await query<any>(
-      `
-        SELECT pi.*, s.nombre AS supplementNombre
-        FROM pedido_items pi
-        JOIN suplementos s ON s.id = pi.supplement_id
-        WHERE pi.pedido_id = ?
-      `,
-      [pedidoId]
-    );
-
-    return res.status(201).json({ order: order[0], items: orderItems });
-  } catch (err) {
-    await conn.rollback();
-    throw err;
-  } finally {
-    conn.release();
+  if (out.p_error) {
+    return res.status(400).json({ error: String(out.p_error) });
   }
+
+  const pedidoId = Number(out.p_pedido_id);
+  if (!Number.isFinite(pedidoId)) {
+    return res.status(500).json({ error: "No se pudo crear el pedido" });
+  }
+
+  const order = await query<any>(
+    `SELECT id, user_id, estado, total, created_at FROM pedidos WHERE id = ?`,
+    [pedidoId]
+  );
+  const orderItems = await query<any>(
+    `
+      SELECT pi.*, s.nombre AS supplementNombre
+      FROM pedido_items pi
+      JOIN suplementos s ON s.id = pi.supplement_id
+      WHERE pi.pedido_id = ?
+    `,
+    [pedidoId]
+  );
+
+  return res.status(201).json({ order: order[0], items: orderItems });
 });
 
 router.get("/", requireAuth, async (req: Request, res: Response) => {

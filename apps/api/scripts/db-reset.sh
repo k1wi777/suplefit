@@ -31,6 +31,12 @@ echo "→ Reseteando tablas en ${DB_NAME}..."
 echo "→ Aplicando schema.sql..."
 "${MYSQL[@]}" "$DB_NAME" < db/schema.sql
 
+echo "→ Aplicando rutinas almacenadas (003_stored_routines.sql)..."
+"${MYSQL[@]}" "$DB_NAME" < db/migrations/003_stored_routines.sql
+
+echo "→ Unificando collation (004_collation_unicode.sql)..."
+"${MYSQL[@]}" "$DB_NAME" < db/migrations/004_collation_unicode.sql
+
 echo "→ Ejecutando seed (categorías, productos, admin)..."
 npx ts-node -r dotenv/config src/seed.ts dotenv_config_path=.env.local 2>/dev/null \
   || npx ts-node src/seed.ts

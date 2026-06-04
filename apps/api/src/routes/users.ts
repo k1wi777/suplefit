@@ -2,7 +2,7 @@ import type { Request, Response, Router } from "express";
 import { Router as expressRouter } from "express";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { query } from "../lib/db";
+import { callProcedure, query, queryScalar } from "../lib/db";
 import { requireAuth } from "../middleware/auth";
 
 const router: Router = expressRouter();
@@ -28,7 +28,15 @@ router.get("/profile", requireAuth, async (req: Request, res: Response) => {
   );
   const user = users[0];
   if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
-  return res.json({ user, isAdmin: req.user!.isAdmin });
+
+  const imc = await queryScalar<number | null>(
+    "SELECT fn_calcular_imc(?, ?) AS v",
+    [user.peso, user.altura]
+  );
+  const clasificacionImc =
+    imc != null ? await queryScalar<string | null>("SELECT fn_clasificar_imc(?) AS v", [imc]) : null;
+
+  return res.json({ user: { ...user, imc, clasificacionImc }, isAdmin: req.user!.isAdmin });
 });
 
 router.put("/profile", requireAuth, async (req: Request, res: Response) => {
@@ -71,16 +79,7 @@ router.put("/profile", requireAuth, async (req: Request, res: Response) => {
 
 router.delete("/profile", requireAuth, async (req: Request, res: Response) => {
   const userId = req.user!.userId;
-  const pedidos = await query<{ id: number }>("SELECT id FROM pedidos WHERE user_id = ?", [userId]);
-  for (const p of pedidos) {
-    await query("DELETE FROM pedido_items WHERE pedido_id = ?", [p.id]);
-  }
-  await query("DELETE FROM pedidos WHERE user_id = ?", [userId]);
-  await query("DELETE FROM recomendaciones WHERE user_id = ?", [userId]);
-  await query("DELETE FROM seguimiento_peso WHERE user_id = ?", [userId]);
-  await query("DELETE FROM habitos_diarios WHERE user_id = ?", [userId]);
-  await query("DELETE FROM administradores WHERE user_id = ?", [userId]);
-  await query("DELETE FROM usuarios WHERE id = ?", [userId]);
+  await callProcedure("sp_eliminar_cuenta_usuario", [userId]);
   return res.json({ ok: true });
 });
 

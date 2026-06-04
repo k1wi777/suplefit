@@ -2,7 +2,7 @@ import type { Request, Response, Router } from "express";
 import { Router as expressRouter } from "express";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { query } from "../lib/db";
+import { callProcedure, query, queryScalar } from "../lib/db";
 import { signAccessToken } from "../lib/jwt";
 import { requireAuth } from "../middleware/auth";
 
@@ -42,26 +42,27 @@ router.post("/register", async (req: Request, res: Response) => {
 
   const password_hash = await bcrypt.hash(password, 10);
 
-  await query<any>(
-    `
-      INSERT INTO usuarios
-        (nombre, correo, password_hash, edad, peso, altura, sexo, nivel_actividad, objetivo,
-         consentimiento_datos, consentimiento_fecha, politica_version)
-      VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), ?)
-    `,
-    [nombre, correo, password_hash, edad, peso, altura, sexo, nivelActividad, objetivo, version]
+  const { p_user_id: rawUserId } = await callProcedure(
+    "sp_registrar_usuario",
+    [
+      nombre,
+      correo,
+      password_hash,
+      edad,
+      peso,
+      altura,
+      sexo,
+      nivelActividad,
+      objetivo,
+      version,
+    ],
+    ["p_user_id"]
   );
-  const user = await query<any>("SELECT id, nombre, correo, objetivo FROM usuarios WHERE correo = ? LIMIT 1", [
-    correo,
-  ]);
-  const userId = user[0]?.id as number | undefined;
-  if (userId) {
-    await query(
-      `INSERT INTO seguimiento_peso (user_id, peso, registrado_en) VALUES (?, ?, CURDATE())`,
-      [userId, peso]
-    );
-  }
+  const userId = Number(rawUserId);
+  const user = await query<any>(
+    "SELECT id, nombre, correo, objetivo FROM usuarios WHERE id = ? LIMIT 1",
+    [userId]
+  );
 
   return res.status(201).json({ user: user[0] });
 });
@@ -87,10 +88,7 @@ router.post("/login", async (req: Request, res: Response) => {
   const ok = await bcrypt.compare(password, user.password_hash);
   if (!ok) return res.status(401).json({ error: "Credenciales inválidas" });
 
-  const admins = await query<{ id: number }>("SELECT id FROM administradores WHERE user_id = ? LIMIT 1", [
-    user.id,
-  ]);
-  const isAdmin = admins.length > 0;
+  const isAdmin = Boolean(await queryScalar<number>("SELECT fn_usuario_es_admin(?) AS v", [user.id]));
 
   const token = signAccessToken({ userId: user.id, isAdmin });
 
@@ -108,7 +106,24 @@ router.get("/me", requireAuth, async (req: Request, res: Response) => {
   );
   const user = users[0];
   if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
-  return res.json({ user, isAdmin: req.user!.isAdmin });
+
+  const imc = await queryScalar<number | null>(
+    "SELECT fn_calcular_imc(?, ?) AS v",
+    [user.peso, user.altura]
+  );
+  const clasificacionImc =
+    imc != null ? await queryScalar<string | null>("SELECT fn_clasificar_imc(?) AS v", [imc]) : null;
+  const resumenPesoRaw = await queryScalar<unknown>("SELECT fn_resumen_peso(?) AS v", [userId]);
+  const resumenPeso =
+    typeof resumenPesoRaw === "string"
+      ? JSON.parse(resumenPesoRaw)
+      : resumenPesoRaw ?? null;
+
+  return res.json({
+    user: { ...user, imc, clasificacionImc },
+    resumenPeso,
+    isAdmin: req.user!.isAdmin,
+  });
 });
 
 export default router;

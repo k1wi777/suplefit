@@ -18,6 +18,7 @@ export const env = {
   DB_USER: requireEnv("DB_USER"),
   DB_PASSWORD: requireEnv("DB_PASSWORD"),
   DB_NAME: requireEnv("DB_NAME"),
+  DB_SSL: process.env.DB_SSL === "1",
 
   SEED_DEMO: process.env.SEED_DEMO === "1",
   ADMIN_EMAIL: process.env.ADMIN_EMAIL ?? "",

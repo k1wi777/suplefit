@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   consentimiento_fecha TIMESTAMP NULL,
   politica_version VARCHAR(20) DEFAULT '1.0',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS administradores (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -24,14 +24,14 @@ CREATE TABLE IF NOT EXISTS administradores (
   CONSTRAINT fk_admin_user
     FOREIGN KEY (user_id) REFERENCES usuarios(id)
     ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS categorias (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(120) NOT NULL,
   slug VARCHAR(120) NOT NULL UNIQUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS suplementos (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS suplementos (
   CONSTRAINT fk_supplement_category
     FOREIGN KEY (categoria_id) REFERENCES categorias(id)
     ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS recomendaciones (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS recomendaciones (
     FOREIGN KEY (supplement_id) REFERENCES suplementos(id)
     ON DELETE CASCADE,
   INDEX idx_recs_user_created (user_id, created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS pedidos (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS pedidos (
     FOREIGN KEY (user_id) REFERENCES usuarios(id)
     ON DELETE CASCADE,
   INDEX idx_pedidos_user (user_id, created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS pedido_items (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS pedido_items (
   CONSTRAINT fk_pedido_item_supp
     FOREIGN KEY (supplement_id) REFERENCES suplementos(id)
     ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS seguimiento_peso (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS seguimiento_peso (
     FOREIGN KEY (user_id) REFERENCES usuarios(id)
     ON DELETE CASCADE,
   INDEX idx_peso_user_fecha (user_id, registrado_en, created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS habitos_diarios (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -118,5 +118,5 @@ CREATE TABLE IF NOT EXISTS habitos_diarios (
     FOREIGN KEY (user_id) REFERENCES usuarios(id)
     ON DELETE CASCADE,
   UNIQUE KEY uq_habito_user_fecha (user_id, fecha)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

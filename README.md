@@ -22,6 +22,7 @@ pnpm install
 # 2) Crear base de datos MySQL (ver sección "Base de datos")
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS suplefit CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 mysql -u root -p suplefit < apps/api/db/schema.sql
+mysql -u root -p suplefit < apps/api/db/migrations/003_stored_routines.sql
 
 # 3) Variables de entorno
 cp apps/api/.env.example apps/api/.env
@@ -163,6 +164,7 @@ Desde la raíz del proyecto, **fuera** del cliente MySQL:
 
 ```bash
 mysql -u root -p suplefit < apps/api/db/schema.sql
+mysql -u root -p suplefit < apps/api/db/migrations/003_stored_routines.sql
 ```
 
 Verifica que las tablas existan:
@@ -360,6 +362,26 @@ pnpm start:web
 - 1 suplemento → muchas filas en historial de recomendaciones  
 
 El esquema completo está en `apps/api/db/schema.sql`.
+
+### Rutinas almacenadas (funciones y procedimientos)
+
+La lógica crítica (pedidos, peso, recomendaciones, altas/bajas) se ejecuta en MySQL mediante **7 funciones**, **9 procedimientos** y un **trigger**. Tras el esquema, aplica:
+
+```bash
+mysql -u root -p suplefit < apps/api/db/migrations/003_stored_routines.sql
+```
+
+O usa el reset completo: `apps/api/scripts/db-reset.sh` (schema + rutinas + seed).
+
+**Documentación académica detallada** (flujos, diagramas, ejemplos `CALL`/`SELECT`, verificación para defensa):
+
+→ [`docs/BASE_DE_DATOS.md`](docs/BASE_DE_DATOS.md)
+
+Endpoints nuevos ligados a rutinas: `GET /api/admin/stats`, `POST /api/admin/orders/:id/confirm` (confirma pedido y descuenta stock).
+
+### Despliegue en Railway (API + MySQL)
+
+Configuración automática: `apps/api/railway.toml`, migraciones en pre-deploy y guía paso a paso en **[`docs/RAILWAY.md`](docs/RAILWAY.md)**.
 
 ---
 

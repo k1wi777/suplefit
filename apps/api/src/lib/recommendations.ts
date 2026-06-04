@@ -1,4 +1,4 @@
-import { query } from "./db";
+import { callProcedure, query } from "./db";
 import {
   highStimSlugs,
   objetivoLabels,
@@ -15,16 +15,11 @@ export type Supplement = {
   advertencias: string | null;
   imagen_url: string | null;
   categoria_id: number;
-  precio: string; // MySQL DECIMAL returns string
+  precio: string;
   stock: number;
   created_at: string;
   updated_at: string;
 };
-
-function buildInClause(values: string[]) {
-  const placeholders = values.map(() => "?").join(",");
-  return { placeholders, params: values };
-}
 
 export async function generateAndFetchRecommendationsForUser(
   userId: number,
@@ -51,36 +46,24 @@ export async function generateAndFetchRecommendationsForUser(
     slugs = slugs.filter((s) => !highStimSlugs.includes(s));
   }
 
-  const { placeholders, params } = buildInClause(slugs);
-
-  await query("DELETE FROM recomendaciones WHERE user_id = ? AND objetivo = ? AND created_at >= (NOW() - INTERVAL 1 DAY)", [
-    userId,
-    mappedObjetivo,
-  ]);
+  await callProcedure("sp_generar_recomendaciones", [userId]);
 
   const recommendedSupplements = await query<Supplement>(
     `
       SELECT s.*
       FROM suplementos s
-      JOIN categorias c ON c.id = s.categoria_id
-      WHERE c.slug IN (${placeholders})
-      ORDER BY s.stock DESC, s.precio ASC
-      LIMIT 6
+      INNER JOIN recomendaciones r ON r.supplement_id = s.id
+      WHERE r.user_id = ? AND r.objetivo = ? AND DATE(r.created_at) = CURDATE()
+      ORDER BY r.id ASC
     `,
-    params
+    [userId, mappedObjetivo]
   );
-
-  for (const s of recommendedSupplements) {
-    await query(
-      "INSERT INTO recomendaciones (user_id, supplement_id, objetivo) VALUES (?, ?, ?)",
-      [userId, s.id, mappedObjetivo]
-    );
-  }
 
   const notas = [
     "Sugerencias orientativas basadas en reglas, no diagnóstico médico.",
     "Se priorizan productos con stock disponible y precio accesible.",
     `Objetivo: ${objetivoLabels[mappedObjetivo]}.`,
+    "Generadas por el procedimiento almacenado sp_generar_recomendaciones.",
   ];
   if (sedentary) {
     notas.push("Nivel de actividad bajo o moderado: se omiten pre-entrenos y estimulantes fuertes.");
@@ -97,4 +80,3 @@ export async function generateAndFetchRecommendationsForUser(
     },
   };
 }
-

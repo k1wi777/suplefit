@@ -1,0 +1,11 @@
+# Monorepo SupleFit — puntero para Railway
+#
+# Crea DOS servicios en el mismo proyecto:
+#   1) MySQL  → New → Database → MySQL
+#   2) API    → New → GitHub Repo → este repositorio
+#
+# Servicio API (Settings):
+#   Root Directory:     apps/api
+#   Config file path:   /apps/api/railway.toml
+#
+# La configuración real de build/deploy está en apps/api/railway.toml
