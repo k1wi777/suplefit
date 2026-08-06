@@ -1,11 +1,11 @@
 import type { Request, Response } from "express";
-import { MySqlTrackingRepository } from "./mysql-tracking.repository";
+import { PostgresTrackingRepository } from "./postgres-tracking.repository";
 import { TrackingService } from "./tracking.service";
 import { asyncHandler } from "../../shared/utils/async-handler";
 import { getValidated } from "../../shared/utils/get-validated";
 import type { RegisterWeightDto, SaveHabitDto } from "./tracking.dto";
 
-const trackingService = new TrackingService(new MySqlTrackingRepository());
+const trackingService = new TrackingService(new PostgresTrackingRepository());
 
 const todayIsoDate = () => new Date().toISOString().slice(0, 10);
 

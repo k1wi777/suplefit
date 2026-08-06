@@ -14,11 +14,16 @@ export const env = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN ?? "7d",
 
   DB_HOST: requireEnv("DB_HOST"),
-  DB_PORT: Number(process.env.DB_PORT ?? 3306),
+  DB_PORT: Number(process.env.DB_PORT ?? 5432),
   DB_USER: requireEnv("DB_USER"),
   DB_PASSWORD: requireEnv("DB_PASSWORD"),
   DB_NAME: requireEnv("DB_NAME"),
   DB_SSL: process.env.DB_SSL === "1",
+
+  /** PostgreSQL — URL completa o construida a partir de DB_* */
+  DATABASE_URL:
+    process.env.DATABASE_URL ??
+    `postgresql://${requireEnv("DB_USER")}:${encodeURIComponent(requireEnv("DB_PASSWORD"))}@${requireEnv("DB_HOST")}:${Number(process.env.DB_PORT ?? 5432)}/${requireEnv("DB_NAME")}`,
 
   SEED_DEMO: process.env.SEED_DEMO === "1",
   ADMIN_EMAIL: process.env.ADMIN_EMAIL ?? "",

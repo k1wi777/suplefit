@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { MySqlAdminRepository } from "./mysql-admin.repository";
+import { PostgresAdminRepository } from "./postgres-admin.repository";
 import { AdminService } from "./admin.service";
 import { asyncHandler } from "../../shared/utils/async-handler";
 import { getValidated } from "../../shared/utils/get-validated";
@@ -11,7 +11,7 @@ import type {
   SupplementUpsertDto,
 } from "./admin.dto";
 
-const adminService = new AdminService(new MySqlAdminRepository());
+const adminService = new AdminService(new PostgresAdminRepository());
 
 class AdminController {
   getStats = asyncHandler(async (_req: Request, res: Response) => {

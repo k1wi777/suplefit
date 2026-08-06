@@ -2,12 +2,12 @@
 // Controller (HTTP + validación)
 import type { Request, Response } from "express";
 import { OrderService } from "./order.service";
-import { MySqlOrderRepository } from "./mysql-order.repository";
+import { PostgresOrderRepository } from "./postgres-order.repository";
 import { asyncHandler } from "../../shared/utils/async-handler";
 import { getValidated } from "../../shared/utils/get-validated";
 import type { CreateOrderDto, GetOrderParamsDto } from "./order.dto";
 
-const orderService = new OrderService(new MySqlOrderRepository());
+const orderService = new OrderService(new PostgresOrderRepository());
 
 class OrderController {
   createOrder = asyncHandler(async (req: Request, res: Response) => {

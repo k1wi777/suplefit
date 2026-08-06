@@ -1,12 +1,12 @@
 import type { Request, Response } from "express";
 import { RecommendationService } from "./recommendation.service";
-import { MySqlRecommendationRepository } from "./mysql-recommendation.repository";
+import { PostgresRecommendationRepository } from "./postgres-recommendation.repository";
 import { asyncHandler } from "../../shared/utils/async-handler";
 import { getValidated } from "../../shared/utils/get-validated";
 import type { GetHistoryQueryDto } from "./recommendation.dto";
 
 const recommendationService = new RecommendationService(
-  new MySqlRecommendationRepository(),
+  new PostgresRecommendationRepository(),
 );
 
 class RecommendationController {

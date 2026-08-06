@@ -1,11 +1,11 @@
 import type { Request, Response } from "express";
-import { MySqlAuthRepository } from "./mysql-auth.repository";
+import { PostgresAuthRepository } from "./postgres-auth.repository";
 import { AuthService } from "./auth.service";
 import { asyncHandler } from "../../shared/utils/async-handler";
 import { getValidated } from "../../shared/utils/get-validated";
 import type { LoginDto, RegisterDto } from "./auth.dto";
 
-const authService = new AuthService(new MySqlAuthRepository());
+const authService = new AuthService(new PostgresAuthRepository());
 
 class AuthController {
   register = asyncHandler(async (req: Request, res: Response) => {

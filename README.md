@@ -7,7 +7,8 @@ Aplicación web para **recomendaciones de suplementos deportivos personalizadas*
 | Frontend | Next.js (React) + TailwindCSS |
 | Backend | Express + TypeScript |
 | Autenticación | JWT |
-| Base de datos | MySQL |
+| Base de datos | PostgreSQL |
+| ORM | Drizzle ORM + driver `postgres` (`postgres-js`) |
 
 ---
 
@@ -19,20 +20,21 @@ git clone <URL_DEL_REPOSITORIO> suplefit
 cd suplefit
 pnpm install
 
-# 2) Crear base de datos MySQL (ver sección "Base de datos")
-mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS suplefit CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-mysql -u root -p suplefit < apps/api/db/schema.sql
-mysql -u root -p suplefit < apps/api/db/migrations/003_stored_routines.sql
+# 2) Crear base de datos PostgreSQL (ver sección "Base de datos")
+createdb -U postgres suplefit
 
 # 3) Variables de entorno
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env.local
-# Edita apps/api/.env con tu usuario/contraseña de MySQL
+# Edita apps/api/.env con tu usuario/contraseña de PostgreSQL
 
-# 4) Levantar backend (terminal 1)
+# 4) Aplicar schema + datos de prueba
+pnpm db:reset
+
+# 5) Levantar backend (terminal 1)
 pnpm dev:api
 
-# 5) Levantar frontend (terminal 2)
+# 6) Levantar frontend (terminal 2)
 pnpm dev:web
 ```
 
@@ -50,7 +52,7 @@ Instala en tu máquina:
 |-------------|---------------------|----------------|
 | **Node.js** | 18 LTS o superior (20+ recomendado) | Ejecutar frontend y backend |
 | **pnpm** | 8+ | Gestor de paquetes del monorepo |
-| **MySQL** | 8.0+ (o MariaDB 10.6+ compatible) | Persistencia de usuarios, catálogo y recomendaciones |
+| **PostgreSQL** | 14+ (16+ recomendado) | Persistencia de usuarios, catálogo y recomendaciones |
 | **Git** | Cualquier versión reciente | Clonar el repositorio |
 
 Comprueba que todo esté instalado:
@@ -58,7 +60,7 @@ Comprueba que todo esté instalado:
 ```bash
 node -v    # debe mostrar v18.x o superior
 pnpm -v
-mysql --version
+psql --version
 git --version
 ```
 
@@ -68,21 +70,25 @@ git --version
 npm install -g pnpm
 ```
 
-#### Instalar MySQL
+#### Instalar PostgreSQL
 
-- **Linux (Debian/Ubuntu):** `sudo apt install mysql-server`
-- **Windows:** [MySQL Installer](https://dev.mysql.com/downloads/installer/)
-- **macOS:** `brew install mysql` o MySQL desde el instalador oficial
+- **Linux (Debian/Ubuntu):** `sudo apt install postgresql postgresql-client`
+- **Windows:** [PostgreSQL Installer](https://www.postgresql.org/download/windows/)
+- **macOS:** `brew install postgresql@16`
 
 Asegúrate de que el servicio esté activo:
 
 ```bash
 # Linux (systemd)
-sudo systemctl start mysql
-sudo systemctl status mysql
+sudo systemctl start postgresql
+sudo systemctl status postgresql
 ```
 
-Necesitarás un usuario con permisos sobre la base `suplefit` (puede ser `root` en desarrollo local).
+En desarrollo local suele usarse el usuario `postgres`. Si conectas por TCP (`localhost`), necesitas asignarle contraseña:
+
+```bash
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'tu_password';"
+```
 
 ---
 
@@ -98,38 +104,48 @@ Estructura del proyecto:
 ```
 suplefit/
 ├── apps/
-│   ├── api/          # Backend Express + TypeScript
-│   │   ├── db/       # schema.sql
+│   ├── api/                    # Backend Express + TypeScript
+│   │   ├── db/
+│   │   │   ├── postgres/       # schema.sql, reset.sql (PostgreSQL)
+│   │   │   └── migrations/     # legacy MySQL
+│   │   ├── drizzle.config.ts
 │   │   └── src/
-│   └── web/          # Frontend Next.js
-├── package.json      # Scripts raíz (pnpm)
+│   │       ├── lib/
+│   │       │   ├── db/schema.ts    # schema Drizzle
+│   │       │   └── postgres.ts     # conexión ORM
+│   │       └── modules/
+│   └── web/                    # Frontend Next.js
+├── package.json                # Scripts raíz (pnpm)
 ├── pnpm-workspace.yaml
 └── README.md
 ```
 
-estructura de las features de la API:
+Estructura de las features de la API:
+
+```
 src/modules/user/
-  ├── user.routes.ts       // solo declara rutas
-  ├── user.controller.ts   // maneja req/res, valida, llama al service
-  ├── user.service.ts      // lógica de negocio
-  ├── user.repository.ts   // acceso a datos (interfaz)
-  └── mysql-user.repository.ts // implementación concreta
+  ├── user.routes.ts              # solo declara rutas
+  ├── user.controller.ts          # maneja req/res, valida, llama al service
+  ├── user.service.ts             # lógica de negocio
+  ├── user.repository.ts          # acceso a datos (interfaz)
+  ├── postgres-user.repository.ts # implementación PostgreSQL (activa)
+  └── mysql-user.repository.ts    # implementación MySQL (legacy)
+```
+
+El controller elige qué implementación usar. Por defecto todos los módulos usan los repositorios `postgres-*`.
 
 ---
 
-estrucutra del manejo de errores de la API
-Patrón aplicado
+### Patrón de manejo de errores de la API
 
-Capa	Responsabilidad
-Controller
-Validación → CommonErrors / asyncHandler; sin try/catch
-Service
-Lógica de negocio → *Errors del módulo
-Repository
-Datos / resultados, sin CustomError
-errorHandler
-Respuesta HTTP unificada
+| Capa | Responsabilidad |
+|------|-----------------|
+| Controller | Validación → CommonErrors / asyncHandler; sin try/catch |
+| Service | Lógica de negocio → *Errors del módulo |
+| Repository | Datos / resultados, sin CustomError |
+| errorHandler | Respuesta HTTP unificada |
 
+---
 
 ### 3. Instalar dependencias (`pnpm install`)
 
@@ -141,76 +157,84 @@ pnpm install
 
 Esto instala dependencias de `apps/api` y `apps/web` gracias al workspace de pnpm.
 
-> **Alternativa con npm:** si prefieres npm, instala en cada app por separado:
-> ```bash
-> cd apps/api && npm install
-> cd ../web && npm install
-> ```
+> Usa **pnpm**, no npm, para los scripts del monorepo (`pnpm db:reset`, `pnpm dev:api`, etc.).
 
 ---
 
-### 4. Base de datos MySQL
+### 4. Base de datos PostgreSQL
 
 #### 4.1 Qué necesitas
 
-- Servidor MySQL en ejecución (`localhost`, puerto por defecto **3306**).
+- Servidor PostgreSQL en ejecución (`localhost`, puerto por defecto **5432**).
 - Usuario y contraseña con permiso para crear tablas e insertar datos.
 - Base de datos llamada **`suplefit`** (o el nombre que definas en `.env`).
 
 #### 4.2 Crear la base de datos
 
-Entra al cliente MySQL:
-
 ```bash
-mysql -u root -p
+createdb -U postgres suplefit
 ```
 
-Ejecuta:
+O desde `psql`:
+
+```bash
+sudo -u postgres psql
+```
 
 ```sql
-CREATE DATABASE IF NOT EXISTS suplefit
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
--- Opcional: usuario dedicado (recomendado fuera de desarrollo)
--- CREATE USER 'suplefit'@'localhost' IDENTIFIED BY 'tu_password_seguro';
--- GRANT ALL PRIVILEGES ON suplefit.* TO 'suplefit'@'localhost';
--- FLUSH PRIVILEGES;
-
-EXIT;
+CREATE DATABASE suplefit;
+\q
 ```
 
-#### 4.3 Crear tablas (esquema)
+#### 4.3 Aplicar schema y seed (recomendado)
 
-Desde la raíz del proyecto, **fuera** del cliente MySQL:
+Desde la raíz del proyecto:
 
 ```bash
-mysql -u root -p suplefit < apps/api/db/schema.sql
-mysql -u root -p suplefit < apps/api/db/migrations/003_stored_routines.sql
+pnpm db:reset
+```
+
+Ese comando hace:
+
+1. Borra tablas existentes (`db/postgres/reset.sql`)
+2. Aplica el schema (`db/postgres/schema.sql`)
+3. Ejecuta el seed (categorías, productos, admin)
+
+**Solo schema** (sin borrar ni seedear):
+
+```bash
+cd apps/api
+export PGPASSWORD="tu_password"
+psql -h localhost -p 5432 -U postgres -d suplefit -v ON_ERROR_STOP=1 -f db/postgres/schema.sql
 ```
 
 Verifica que las tablas existan:
 
 ```bash
-mysql -u root -p -e "USE suplefit; SHOW TABLES;"
+psql -U postgres -d suplefit -c "\dt"
 ```
 
-Deberías ver: `usuarios`, `administradores`, `categorias`, `suplementos`, `recomendaciones`.
+Deberías ver: `usuarios`, `administradores`, `categorias`, `suplementos`, `recomendaciones`, `pedidos`, `pedido_items`, `seguimiento_peso`, `habitos_diarios`, `reglas_objetivo_categoria`.
 
-#### 4.4 Datos de prueba (seed automático)
+#### 4.4 Datos de prueba (seed)
 
-Al iniciar el backend con `SEED_DEMO=1` (valor por defecto en `.env.example`), se cargan automáticamente:
+Con `SEED_DEMO=1` en `.env`, el seed también corre al arrancar la API.
 
-- Categorías (creatina, whey, mass gainer, etc.)
-- Suplementos de ejemplo
-- Usuario administrador
-
-No hace falta ejecutar un script manual; basta con levantar la API la primera vez.
-
-Para forzar solo el seed (opcional):
+Para forzar solo el seed:
 
 ```bash
 pnpm seed
+```
+
+#### 4.5 Drizzle (opcional)
+
+El schema TypeScript está en `apps/api/src/lib/db/schema.ts`. Scripts útiles:
+
+```bash
+cd apps/api
+pnpm db:generate   # generar migraciones desde el schema Drizzle
+pnpm db:push       # sincronizar schema con la BD
+pnpm db:studio     # UI visual de Drizzle
 ```
 
 ---
@@ -219,7 +243,7 @@ pnpm seed
 
 #### 5.1 Backend — `apps/api/.env`
 
-El backend usa **dotenv** y lee el archivo **`apps/api/.env`** (no `.env.local`).
+El backend usa **dotenv** y lee el archivo **`apps/api/.env`**.
 
 ```bash
 cp apps/api/.env.example apps/api/.env
@@ -235,10 +259,13 @@ JWT_SECRET=cambia-esto-por-un-secreto-largo
 JWT_EXPIRES_IN=7d
 
 DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=TU_PASSWORD_MYSQL
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=TU_PASSWORD_POSTGRES
 DB_NAME=suplefit
+
+# Opcional: URL completa (si no se define, se construye desde DB_*)
+# DATABASE_URL=postgresql://postgres:TU_PASSWORD@localhost:5432/suplefit
 
 SEED_DEMO=1
 ADMIN_EMAIL=admin@suplefit.com
@@ -247,7 +274,9 @@ ADMIN_PASSWORD=Admin12345
 
 | Variable | Descripción |
 |----------|-------------|
-| `DB_*` | Conexión a MySQL |
+| `DB_*` | Conexión a PostgreSQL |
+| `DATABASE_URL` | URL completa (opcional; tiene prioridad si se define) |
+| `DB_SSL` | `1` para conexiones SSL (Railway, Supabase, etc.) |
 | `JWT_SECRET` | Clave para firmar tokens (cámbiala en producción) |
 | `CORS_ORIGIN` | Origen permitido del frontend (`http://localhost:3000`) |
 | `SEED_DEMO` | `1` = insertar categorías, productos y admin al arrancar |
@@ -355,15 +384,24 @@ pnpm start:web
 | Problema | Posible causa | Qué hacer |
 |----------|---------------|-----------|
 | `Missing env var: JWT_SECRET` | Falta `apps/api/.env` | Copia `.env.example` → `.env` y completa valores |
-| Error de conexión MySQL | Servicio apagado o credenciales incorrectas | Revisa `DB_*` y que MySQL esté activo |
+| `ERR_PNPM_IGNORED_BUILDS` | Build scripts bloqueados en pnpm | Revisa `pnpm-workspace.yaml` → `allowBuilds` con `true` |
+| Error de autenticación PostgreSQL | Contraseña no asignada al usuario | `ALTER USER postgres PASSWORD '...'` y coincide con `DB_PASSWORD` |
+| Conexión rechazada puerto 3306 | Variable `DB_PORT` de MySQL en el entorno | Usa `DB_PORT=5432` en `.env` o `unset DB_PORT` |
 | `ECONNREFUSED` en el frontend | API no levantada | Ejecuta `pnpm dev:api` antes de usar la web |
 | CORS / fetch bloqueado | `CORS_ORIGIN` distinto al puerto del front | Debe ser `http://localhost:3000` |
-| Catálogo vacío | Seed no corrió | Pon `SEED_DEMO=1` y reinicia la API |
+| Catálogo vacío | Seed no corrió | Ejecuta `pnpm db:reset` o pon `SEED_DEMO=1` y reinicia la API |
 | 404 en rutas `/api/api/...` | URL mal configurada | `NEXT_PUBLIC_API_URL` debe ser `http://localhost:4000` (sin `/api`) |
 
 ---
 
 ## Base de datos — referencia
+
+### Stack
+
+- **PostgreSQL** como motor de base de datos.
+- **Drizzle ORM** para acceso tipado desde TypeScript.
+- **Driver `postgres`** (`postgres-js`) como cliente de conexión.
+- La lógica de negocio (pedidos, recomendaciones, peso, etc.) vive en la capa de repositorios TypeScript con transacciones Drizzle.
 
 ### Tablas principales
 
@@ -377,37 +415,33 @@ pnpm start:web
 
 **`recomendaciones`** — id, user_id, supplement_id, objetivo, created_at
 
+**`pedidos`** / **`pedido_items`** — comercio y líneas de pedido
+
+**`seguimiento_peso`** / **`habitos_diarios`** — tracking del usuario
+
+**`reglas_objetivo_categoria`** — reglas de recomendación por objetivo
+
 ### Relaciones
 
-- 1 usuario → muchas recomendaciones  
+- 1 usuario → muchas recomendaciones, pedidos y registros de seguimiento  
 - 1 categoría → muchos suplementos  
 - 1 suplemento → muchas filas en historial de recomendaciones  
 
-El esquema completo está en `apps/api/db/schema.sql`.
+El schema SQL está en `apps/api/db/postgres/schema.sql`.  
+El schema Drizzle (fuente de verdad para el ORM) está en `apps/api/src/lib/db/schema.ts`.
 
-### Rutinas almacenadas (funciones y procedimientos)
+### Implementación legacy MySQL
 
-La lógica crítica (pedidos, peso, recomendaciones, altas/bajas) se ejecuta en MySQL mediante **7 funciones**, **9 procedimientos** y un **trigger**. Tras el esquema, aplica:
+Los archivos en `apps/api/db/schema.sql`, `apps/api/db/migrations/` y los repositorios `mysql-*.repository.ts` se conservan por compatibilidad. Para volver a MySQL basta con cambiar la implementación en el controller de cada módulo.
 
-```bash
-mysql -u root -p suplefit < apps/api/db/migrations/003_stored_routines.sql
-```
+### Despliegue en Railway (API + PostgreSQL)
 
-O usa el reset completo: `apps/api/scripts/db-reset.sh` (schema + rutinas + seed).
-
-**Documentación académica detallada** (flujos, diagramas, ejemplos `CALL`/`SELECT`, verificación para defensa):
-
-→ [`docs/BASE_DE_DATOS.md`](docs/BASE_DE_DATOS.md)
-
-Endpoints nuevos ligados a rutinas: `GET /api/admin/stats`, `POST /api/admin/orders/:id/confirm` (confirma pedido y descuenta stock).
-
-### Despliegue en Railway (API + MySQL)
-
-Configuración automática: `apps/api/railway.toml`, migraciones en pre-deploy y guía paso a paso en **[`docs/RAILWAY.md`](docs/RAILWAY.md)**.
+Configuración automática: `apps/api/railway.toml` y guía paso a paso en **[`docs/RAILWAY.md`](docs/RAILWAY.md)**.  
+> Nota: la guía de Railway puede referirse aún a MySQL; adapta las variables a PostgreSQL (`DATABASE_URL`, `DB_SSL=1`).
 
 ### Despliegue en Vercel (frontend Next.js)
 
-El frontend está en `apps/web` dentro del monorepo (no es submódulo). En Vercel, **Root Directory** = `apps/web`. Guía: **[`docs/VERCEL.md`](docs/VERCEL.md)**.
+El frontend está en `apps/web` dentro del monorepo. En Vercel, **Root Directory** = `apps/web`. Guía: **[`docs/VERCEL.md`](docs/VERCEL.md)**.
 
 ---
 
@@ -422,9 +456,9 @@ El frontend está en `apps/web` dentro del monorepo (no es submódulo). En Verce
 ### Recomendaciones (reglas, no IA real)
 
 - `GET /api/recommendations` (protegido).  
-- Lee el `objetivo` del usuario y mapea categorías en `apps/api/src/lib/recommendationRules.ts`.  
+- Lee el `objetivo` del usuario y aplica reglas desde `reglas_objetivo_categoria`.  
 - Ejemplo: **ganar masa muscular** → creatina, whey protein, mass gainer.  
-- Guarda historial en `recomendaciones` (evita duplicar el mismo día por usuario/objetivo).
+- Guarda historial en `recomendaciones` (regenera las del día actual).
 
 ### Catálogo
 
@@ -434,11 +468,15 @@ El frontend está en `apps/web` dentro del monorepo (no es submódulo). En Verce
 ### Panel administrador
 
 - Requiere JWT de usuario en tabla `administradores`.  
-- CRUD: `GET/POST/PUT/DELETE` bajo `/api/admin/supplements`.
+- CRUD: `GET/POST/PUT/DELETE` bajo `/api/admin/supplements`.  
+- `GET /api/admin/stats` — estadísticas globales.  
+- `POST /api/admin/orders/:id/confirm` — confirma pedido y descuenta stock.
 
 ---
 
-## Scripts disponibles (raíz)
+## Scripts disponibles
+
+### Raíz del monorepo
 
 | Comando | Descripción |
 |---------|-------------|
@@ -449,7 +487,18 @@ El frontend está en `apps/web` dentro del monorepo (no es submódulo). En Verce
 | `pnpm build:web` | Build de producción de Next.js |
 | `pnpm start:api` | Backend compilado (`dist/`) |
 | `pnpm start:web` | Next.js en modo producción |
-| `pnpm seed` | Ejecuta seed manual (opcional) |
+| `pnpm seed` | Ejecuta seed manual |
+| `pnpm db:reset` | Reset PostgreSQL + schema + seed |
+
+### API (`apps/api`)
+
+| Comando | Descripción |
+|---------|-------------|
+| `pnpm db:reset` | Reset completo PostgreSQL |
+| `pnpm db:reset:mysql` | Reset MySQL (legacy) |
+| `pnpm db:generate` | Generar migraciones Drizzle |
+| `pnpm db:push` | Sincronizar schema Drizzle con la BD |
+| `pnpm db:studio` | Abrir Drizzle Studio |
 
 ---
 
@@ -457,4 +506,5 @@ El frontend está en `apps/web` dentro del monorepo (no es submódulo). En Verce
 
 - Subida real de imágenes (multipart).  
 - Endpoint público de categorías.  
-- Docker Compose (MySQL + api + web) para un solo comando de arranque.
+- Docker Compose (PostgreSQL + api + web) para un solo comando de arranque.  
+- Actualizar `docs/BASE_DE_DATOS.md` y `docs/RAILWAY.md` a PostgreSQL.

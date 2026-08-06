@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { SupplementService } from "./supplement.service";
-import { MySqlSupplementRepository } from "./mysql-supplement.repository";
+import { PostgresSupplementRepository } from "./postgres-supplement.repository";
 import { asyncHandler } from "../../shared/utils/async-handler";
 import { getValidated } from "../../shared/utils/get-validated";
 import type {
@@ -9,7 +9,7 @@ import type {
 } from "./supplement.dto";
 
 const supplementService = new SupplementService(
-  new MySqlSupplementRepository(),
+  new PostgresSupplementRepository(),
 );
 
 class SupplementController {

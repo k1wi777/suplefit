@@ -1,12 +1,12 @@
 // Manejo HTTP (request/response); el body validado llega como DTO tipado
 import type { Request, Response } from "express";
 import { UserService } from "./user.service";
-import { MySqlUserRepository } from "./mysql-user.repository";
+import { PostgresUserRepository } from "./postgres-user.repository";
 import { asyncHandler } from "../../shared/utils/async-handler";
 import { getValidated } from "../../shared/utils/get-validated";
 import type { UpdateUserDto } from "./user.dto";
 
-const userService = new UserService(new MySqlUserRepository());
+const userService = new UserService(new PostgresUserRepository());
 
 class UserController {
   getProfile = asyncHandler(async (req: Request, res: Response) => {

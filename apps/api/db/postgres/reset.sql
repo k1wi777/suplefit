@@ -1,0 +1,15 @@
+-- Reset completo del schema PostgreSQL (SupleFit)
+
+DROP TABLE IF EXISTS pedido_items CASCADE;
+DROP TABLE IF EXISTS pedidos CASCADE;
+DROP TABLE IF EXISTS recomendaciones CASCADE;
+DROP TABLE IF EXISTS reglas_objetivo_categoria CASCADE;
+DROP TABLE IF EXISTS seguimiento_peso CASCADE;
+DROP TABLE IF EXISTS habitos_diarios CASCADE;
+DROP TABLE IF EXISTS suplementos CASCADE;
+DROP TABLE IF EXISTS categorias CASCADE;
+DROP TABLE IF EXISTS administradores CASCADE;
+DROP TABLE IF EXISTS usuarios CASCADE;
+
+DROP TYPE IF EXISTS pedido_estado CASCADE;
+DROP TYPE IF EXISTS sexo CASCADE;

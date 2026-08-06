@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import type { UserRepository } from "./user.repository";
 import type { UpdateUserData } from "./user.interfaces";
 import type { UpdateUserDto } from "./user.dto";
-import { queryScalar } from "../../lib/db"; // ideal: esto también iría detrás de otro repository (imc)
+import { calcularImc, clasificarImc } from "../../shared/domain/imc";
 import { UserErrors } from "./user.errors";
 
 export class UserService {
@@ -15,16 +15,11 @@ export class UserService {
       throw UserErrors.notFound();
     }
 
-    const imc = await queryScalar<number | null>(
-      "SELECT fn_calcular_imc(?, ?) AS v",
-      [user.peso, user.altura],
-    );
-    const clasificacionImc =
-      imc != null
-        ? await queryScalar<string | null>("SELECT fn_clasificar_imc(?) AS v", [
-            imc,
-          ])
+    const imc =
+      user.peso != null && user.altura != null
+        ? calcularImc(Number(user.peso), Number(user.altura))
         : null;
+    const clasificacionImc = clasificarImc(imc);
 
     return { ...user, imc, clasificacionImc };
   }
