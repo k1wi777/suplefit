@@ -1,14 +1,16 @@
 import express from "express";
 import cors from "cors";
 import { env } from "./lib/env";
-import authRouter from "./routes/auth";
-import usersRouter from "./routes/users";
-import supplementsRouter from "./routes/supplements";
-import recommendationsRouter from "./routes/recommendations";
-import adminRouter from "./routes/admin";
-import ordersRouter from "./routes/orders";
-import trackingRouter from "./routes/tracking";
+import authRouter from "./modules/auth/auth.routes";
+import usersRouter from "../src/modules/user/user.routes";
+import supplementsRouter from "./modules/supplement/supplement.routes";
+import recommendationsRouter from "./modules/recommendation/recommendation.routes";
+import adminRouter from "./modules/admin/admin.routes";
+import ordersRouter from "./modules/order/order.routes";
+import trackingRouter from "./modules/tracking/tracking.routes";
 import { seedDemoIfNeeded } from "./seed";
+import { notFoundHandler } from "./middleware/not-found";
+import { errorHandler } from "./middleware/error-handler";
 
 async function main() {
   const app = express();
@@ -19,7 +21,7 @@ async function main() {
       credentials: false,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
-    })
+    }),
   );
 
   app.use(express.json({ limit: "1mb" }));
@@ -35,8 +37,10 @@ async function main() {
   app.use("/api/orders", ordersRouter);
   app.use("/api/tracking", trackingRouter);
 
-  // Fallback 404
-  app.use((_req, res) => res.status(404).json({ error: "Not found" }));
+  
+  // SIEMPRE al final, en este orden exacto:
+  app.use(notFoundHandler); // 1. rutas que no existen
+  app.use(errorHandler); // 2. errores lanzados en cualquier ruta (4 parámetros = Express lo detecta como error handler)
 
   if (env.SEED_DEMO) {
     await seedDemoIfNeeded();
@@ -53,4 +57,3 @@ main().catch((err) => {
   console.error("API start error:", err);
   process.exit(1);
 });
-

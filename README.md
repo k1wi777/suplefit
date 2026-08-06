@@ -107,7 +107,29 @@ suplefit/
 └── README.md
 ```
 
+estructura de las features de la API:
+src/modules/user/
+  ├── user.routes.ts       // solo declara rutas
+  ├── user.controller.ts   // maneja req/res, valida, llama al service
+  ├── user.service.ts      // lógica de negocio
+  ├── user.repository.ts   // acceso a datos (interfaz)
+  └── mysql-user.repository.ts // implementación concreta
+
 ---
+
+estrucutra del manejo de errores de la API
+Patrón aplicado
+
+Capa	Responsabilidad
+Controller
+Validación → CommonErrors / asyncHandler; sin try/catch
+Service
+Lógica de negocio → *Errors del módulo
+Repository
+Datos / resultados, sin CustomError
+errorHandler
+Respuesta HTTP unificada
+
 
 ### 3. Instalar dependencias (`pnpm install`)
 

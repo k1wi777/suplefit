@@ -4,6 +4,11 @@ declare global {
       user?: {
         userId: number;
         isAdmin: boolean;
+      },
+      validated?: {
+        body?: unknown;
+        params?: unknown;
+        query?: unknown;
       };
     }
   }
