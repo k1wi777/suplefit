@@ -124,13 +124,38 @@ Estructura de las features de la API:
 
 ```
 src/modules/user/
-  ├── user.routes.ts              # solo declara rutas
-  ├── user.controller.ts          # maneja req/res, valida, llama al service
+  ├── user.routes.ts              # define rutas HTTP y aplica middlewares por endpoint
+  ├── user.controller.ts          # recibe req/res y orquesta la operación
   ├── user.service.ts             # lógica de negocio
-  ├── user.repository.ts          # acceso a datos (interfaz)
+  ├── user.dto.ts                 # schemas Zod + tipos inferidos (body/query/params)
+  ├── user.errors.ts              # errores custom del módulo
+  ├── user.interfaces.ts          # contratos de dominio / inputs / outputs
+  ├── user.repository.ts          # interfaz del repositorio
   ├── postgres-user.repository.ts # implementación PostgreSQL (activa)
-  └── mysql-user.repository.ts    # implementación MySQL (legacy)
+  ├── mysql-user.repository.ts    # implementación MySQL (legacy)
+  └── ...
 ```
+
+Cada feature sigue este patrón:
+
+- `*.routes.ts`: declara las rutas del módulo y aplica los middlewares necesarios por endpoint, por ejemplo `requireAuth`, `validate(...)`, `authorizeAdmin`, etc.
+- `*.dto.ts`: centraliza los schemas Zod para `body`, `params` y `query`, y exporta los tipos inferidos usados por controller/service.
+- `*.controller.ts`: interpreta la request, lee los datos validados con `getValidated(...)`, y delega al service.
+- `*.service.ts`: encapsula la lógica de negocio y dispara errores del módulo (`*.errors.ts`).
+- `*.interfaces.ts`: define los tipos del dominio y las entradas/salidas que se usan entre capas.
+- `*.errors.ts`: expone errores específicos del módulo, normalmente con `CustomError`.
+- `*.repository.ts`: describe el contrato de acceso a datos.
+- `postgres-*.repository.ts` / `mysql-*.repository.ts`: implementaciones concretas según la base de datos activa.
+
+En la práctica, por ejemplo, `auth.routes.ts` hace esto:
+
+```ts
+router.post("/register", validate(RegisterSchema, "body"), authController.register);
+router.post("/login", validate(LoginSchema, "body"), authController.login);
+router.get("/me", requireAuth, authController.me);
+```
+
+Esto permite que cada ruta tenga validación por schema y/o autenticación explícita antes de llegar al controller.
 
 El controller elige qué implementación usar. Por defecto todos los módulos usan los repositorios `postgres-*`.
 
@@ -140,9 +165,10 @@ El controller elige qué implementación usar. Por defecto todos los módulos us
 
 | Capa | Responsabilidad |
 |------|-----------------|
-| Controller | Validación → CommonErrors / asyncHandler; sin try/catch |
-| Service | Lógica de negocio → *Errors del módulo |
-| Repository | Datos / resultados, sin CustomError |
+| Router | Declara rutas, middlewares y validación por schema por endpoint |
+| Controller | Recibe `req/res`, usa DTO validado y delega al service; sin try/catch |
+| Service | Lógica de negocio → `*Errors` del módulo |
+| Repository | Datos / resultados, sin `CustomError` |
 | errorHandler | Respuesta HTTP unificada |
 
 ---
@@ -434,14 +460,15 @@ El schema Drizzle (fuente de verdad para el ORM) está en `apps/api/src/lib/db/s
 
 Los archivos en `apps/api/db/schema.sql`, `apps/api/db/migrations/` y los repositorios `mysql-*.repository.ts` se conservan por compatibilidad. Para volver a MySQL basta con cambiar la implementación en el controller de cada módulo.
 
-### Despliegue en Railway (API + PostgreSQL)
+### Despliegue agnóstico
 
-Configuración automática: `apps/api/railway.toml` y guía paso a paso en **[`docs/RAILWAY.md`](docs/RAILWAY.md)**.  
-> Nota: la guía de Railway puede referirse aún a MySQL; adapta las variables a PostgreSQL (`DATABASE_URL`, `DB_SSL=1`).
+El proyecto está pensado para desplegarse en cualquier proveedor que soporte:
 
-### Despliegue en Vercel (frontend Next.js)
+- Node.js para la API y el frontend
+- PostgreSQL como base de datos
+- variables de entorno para `DB_*`, `JWT_SECRET` y `NEXT_PUBLIC_API_URL`
 
-El frontend está en `apps/web` dentro del monorepo. En Vercel, **Root Directory** = `apps/web`. Guía: **[`docs/VERCEL.md`](docs/VERCEL.md)**.
+La app no depende de Railway, Vercel ni ningún otro proveedor concreto; solo requiere una runtime compatible con Node.js y una base de datos PostgreSQL accesible.
 
 ---
 
