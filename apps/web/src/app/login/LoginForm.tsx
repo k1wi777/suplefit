@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import GlassCard from "@/components/GlassCard";
-import { apiFetch } from "@/lib/api";
-import { setToken } from "@/lib/token";
+import GlassCard from "@/shared/components/GlassCard";
+import { apiFetch } from "@/shared/lib/api";
+import { setToken } from "@/features/auth";
 
 export default function LoginForm() {
   const router = useRouter();

@@ -1,15 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import AdminShell from "@/components/admin/AdminShell";
-import { apiFetch } from "@/lib/api";
-import { getToken } from "@/lib/token";
-import {
-  customerInitials,
-  formatMoney,
-  formatOrderDate,
-  formatOrderId,
-} from "@/lib/adminFormat";
+import { useRouter } from "next/navigation";
+import { AdminShell, customerInitials, formatMoney, formatOrderDate, formatOrderId } from "@/features/admin";
+import { apiFetch } from "@/shared/lib/api";
+import { clearToken, getToken } from "@/features/auth";
 
 type AdminStats = {
   totalUsuarios: number;
@@ -78,6 +73,7 @@ function StatCard({
 }
 
 export default function AdminOrdersPage() {
+  const router = useRouter();
   const token = getToken();
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -117,8 +113,18 @@ export default function AdminOrdersPage() {
   }, [token, estadoFilter]);
 
   useEffect(() => {
-    setLoading(true);
-    load().finally(() => setLoading(false));
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) {
+        setLoading(true);
+        load().finally(() => {
+          if (active) setLoading(false);
+        });
+      }
+    });
+    return () => {
+      active = false;
+    };
   }, [load]);
 
   const filtered = useMemo(() => {
@@ -149,7 +155,13 @@ export default function AdminOrdersPage() {
   const pageOrders = filtered.slice(page * pageSize, page * pageSize + pageSize);
 
   useEffect(() => {
-    setPage(0);
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) setPage(0);
+    });
+    return () => {
+      active = false;
+    };
   }, [search, estadoFilter]);
 
   async function confirmOrder(id: number) {
@@ -189,6 +201,10 @@ export default function AdminOrdersPage() {
       active="orders"
       title="Gestión de pedidos"
       subtitle="Revisa y confirma pedidos de clientes. Al confirmar se descuenta stock (sp_confirmar_pedido)."
+      onLogout={() => {
+        clearToken();
+        router.push("/login");
+      }}
       actions={
         <>
           <button

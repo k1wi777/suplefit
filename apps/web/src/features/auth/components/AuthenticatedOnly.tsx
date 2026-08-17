@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { getToken } from "@/lib/token";
+import { getToken } from "../utils/token";
 
 export default function AuthenticatedOnly({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -10,12 +10,18 @@ export default function AuthenticatedOnly({ children }: { children: React.ReactN
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    let active = true;
     const token = getToken();
     if (!token) {
       router.replace(`/login?next=${encodeURIComponent(pathname || "/dashboard")}`);
       return;
     }
-    setReady(true);
+    Promise.resolve().then(() => {
+      if (active) setReady(true);
+    });
+    return () => {
+      active = false;
+    };
   }, [pathname, router]);
 
   if (!ready) {

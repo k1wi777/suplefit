@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import AdminShell from "@/components/admin/AdminShell";
-import { apiFetch } from "@/lib/api";
-import { getToken } from "@/lib/token";
+import { useRouter } from "next/navigation";
+import { AdminShell } from "@/features/admin";
+import { apiFetch } from "@/shared/lib/api";
+import { clearToken, getToken } from "@/features/auth";
 
 type AdminStats = {
   totalUsuarios: number;
@@ -61,6 +62,7 @@ function MetricCard({
 }
 
 export default function AdminAnalyticsPage() {
+  const router = useRouter();
   const token = getToken();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,6 +86,10 @@ export default function AdminAnalyticsPage() {
       active="analytics"
       title="Estadísticas"
       subtitle="Métricas globales generadas por sp_estadisticas_admin en MySQL."
+      onLogout={() => {
+        clearToken();
+        router.push("/login");
+      }}
     >
       {error ? (
         <div className="mb-6 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-red-300 text-sm">

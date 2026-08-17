@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import DisclaimerBanner from "@/components/DisclaimerBanner";
-import type { ParsedLine } from "@/lib/parseSupplementText";
+import DisclaimerBanner from "@/shared/components/DisclaimerBanner";
+import type { ParsedLine } from "../utils/parseSupplementText";
 
 type Props = {
   benefits: ParsedLine[];

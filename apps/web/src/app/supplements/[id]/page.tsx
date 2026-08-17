@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import GlassCard from "@/components/GlassCard";
+import Image from "next/image";
+import GlassCard from "@/shared/components/GlassCard";
 import { useParams, useRouter } from "next/navigation";
-import { addToCart } from "@/lib/cart";
-import { parseMultilineField } from "@/lib/parseSupplementText";
-import SupplementDetailPanels from "@/components/SupplementDetailPanels";
+import { addToCart } from "@/features/cart";
+import { parseMultilineField, SupplementDetailPanels } from "@/features/catalog";
 
 type Supplement = {
   id: number;
@@ -99,7 +99,7 @@ export default function SupplementDetailPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent z-10"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-transparent to-black/50 z-10 w-full h-full"></div>
           {item.imagen_url ? (
-            <img src={item.imagen_url} alt={item.nombre} className="w-full h-full object-cover object-right opacity-40 blur-sm mix-blend-screen" />
+            <Image src={item.imagen_url} alt={item.nombre} fill priority className="object-cover object-right opacity-40 blur-sm mix-blend-screen" />
           ) : (
             <div className="w-full h-full bg-[#151515] opacity-80"></div>
           )}
@@ -161,7 +161,7 @@ export default function SupplementDetailPage() {
           {/* Product Image Focus & Info Pills */}
           <div className="hidden md:flex flex-1 relative items-center justify-center translate-y-10">
               {item.imagen_url && (
-                <img src={item.imagen_url} alt={item.nombre} className="max-h-[600px] w-auto drop-shadow-2xl z-20 relative animate-fade-in-up animation-delay-200 object-contain mix-blend-normal" />
+                <Image src={item.imagen_url} alt={item.nombre} width={600} height={600} priority className="max-h-[600px] w-auto drop-shadow-2xl z-20 relative animate-fade-in-up animation-delay-200 object-contain mix-blend-normal" />
               )}
               
               {/* Floating Info Pills */}

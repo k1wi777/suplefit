@@ -12,5 +12,6 @@ export function getValidated<T>(
       `getValidated(): no hay datos validados en req.validated.${target}. ¿Olvidaste el middleware validate()?`,
     );
   }
+  
   return value as T;
 }

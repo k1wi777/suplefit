@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import GuestOnly from "@/components/GuestOnly";
+import { GuestOnly } from "@/features/auth";
 import LoginForm from "./LoginForm";
 
 export default function LoginPage() {

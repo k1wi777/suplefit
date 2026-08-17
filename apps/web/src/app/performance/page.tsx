@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import AuthenticatedOnly from "@/components/AuthenticatedOnly";
-import GlassCard from "@/components/GlassCard";
-import DisclaimerBanner from "@/components/DisclaimerBanner";
-import { apiFetch } from "@/lib/api";
-import { getToken } from "@/lib/token";
+import { AuthenticatedOnly, getToken } from "@/features/auth";
+import GlassCard from "@/shared/components/GlassCard";
+import DisclaimerBanner from "@/shared/components/DisclaimerBanner";
+import { apiFetch } from "@/shared/lib/api";
 import { useRouter } from "next/navigation";
 
 type Supplement = {

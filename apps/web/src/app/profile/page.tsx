@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import GlassCard from "@/components/GlassCard";
-import { apiFetch } from "@/lib/api";
-import { getToken, clearToken } from "@/lib/token";
+import Image from "next/image";
+import GlassCard from "@/shared/components/GlassCard";
+import { apiFetch } from "@/shared/lib/api";
+import { getToken, clearToken } from "@/features/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import AuthenticatedOnly from "@/components/AuthenticatedOnly";
-import WeightUpdateSection from "@/components/WeightUpdateSection";
-import NumericInput from "@/components/NumericInput";
+import { AuthenticatedOnly } from "@/features/auth";
+import { WeightUpdateSection } from "@/features/weight-tracker";
+import NumericInput from "@/shared/components/NumericInput";
 
 type Profile = {
   id: number;
@@ -526,7 +527,7 @@ export default function ProfilePage() {
                             <div className="flex items-center gap-4">
                               <div className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 overflow-hidden flex items-center justify-center shrink-0 p-2 text-white/30 group-hover:bg-white/10 group-hover:text-[#baff2e] transition-colors">
                                 {item.imagen_url ? (
-                                  <img src={item.imagen_url} alt={item.nombre} className="h-full w-full object-contain" />
+                                  <Image src={item.imagen_url} alt={item.nombre} width={40} height={40} className="h-full w-full object-contain" />
                                 ) : (
                                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                                 )}

@@ -2,19 +2,25 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken } from "@/lib/token";
+import { getToken } from "../utils/token";
 
 export default function GuestOnly({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    let active = true;
     const token = getToken();
     if (token) {
       router.replace("/dashboard");
       return;
     }
-    setReady(true);
+    Promise.resolve().then(() => {
+      if (active) setReady(true);
+    });
+    return () => {
+      active = false;
+    };
   }, [router]);
 
   if (!ready) {

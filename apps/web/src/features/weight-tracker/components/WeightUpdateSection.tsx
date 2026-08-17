@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import GlassCard from "@/components/GlassCard";
-import { apiFetch } from "@/lib/api";
-import WeightHistoryPanel from "@/components/WeightHistoryPanel";
-import NumericInput from "@/components/NumericInput";
-import type { PesoRowRaw } from "@/lib/weightHistory";
+import { useCallback, useEffect, useState } from "react";
+import GlassCard from "@/shared/components/GlassCard";
+import { apiFetch } from "@/shared/lib/api";
+import WeightHistoryPanel from "./WeightHistoryPanel";
+import NumericInput from "@/shared/components/NumericInput";
+import type { PesoRowRaw } from "../utils/weightHistory";
 
 type Props = {
   token: string;
@@ -15,17 +15,18 @@ type Props = {
 
 export default function WeightUpdateSection({ token, pesoActual, onUpdated }: Props) {
   const [nuevoPeso, setNuevoPeso] = useState(pesoActual);
+  const [prevPesoActual, setPrevPesoActual] = useState(pesoActual);
+  if (pesoActual !== prevPesoActual) {
+    setPrevPesoActual(pesoActual);
+    setNuevoPeso(pesoActual);
+  }
   const [historial, setHistorial] = useState<PesoRowRaw[]>([]);
   const [loadingHist, setLoadingHist] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    setNuevoPeso(pesoActual);
-  }, [pesoActual]);
-
-  async function loadHistorial() {
+  const loadHistorial = useCallback(async () => {
     setLoadingHist(true);
     try {
       const data = await apiFetch<{ historial: PesoRowRaw[] }>("/api/tracking/peso", { token });
@@ -35,11 +36,17 @@ export default function WeightUpdateSection({ token, pesoActual, onUpdated }: Pr
     } finally {
       setLoadingHist(false);
     }
-  }
+  }, [token]);
 
   useEffect(() => {
-    loadHistorial();
-  }, [token]);
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) loadHistorial();
+    });
+    return () => {
+      active = false;
+    };
+  }, [loadHistorial]);
 
   async function handleRegistrarPeso(e: React.FormEvent) {
     e.preventDefault();

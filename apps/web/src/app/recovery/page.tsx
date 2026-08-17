@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import AuthenticatedOnly from "@/components/AuthenticatedOnly";
-import GlassCard from "@/components/GlassCard";
-import DisclaimerBanner from "@/components/DisclaimerBanner";
+import { AuthenticatedOnly } from "@/features/auth";
+import GlassCard from "@/shared/components/GlassCard";
+import DisclaimerBanner from "@/shared/components/DisclaimerBanner";
 
 export default function RecoveryPage() {
   return (

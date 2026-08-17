@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import GlassCard from "@/components/GlassCard";
-import { apiFetch } from "@/lib/api";
-import GuestOnly from "@/components/GuestOnly";
+import GlassCard from "@/shared/components/GlassCard";
+import { apiFetch } from "@/shared/lib/api";
+import { GuestOnly } from "@/features/auth";
 import Link from "next/link";
-import DisclaimerBanner from "@/components/DisclaimerBanner";
-import NumericInput from "@/components/NumericInput";
+import DisclaimerBanner from "@/shared/components/DisclaimerBanner";
+import NumericInput from "@/shared/components/NumericInput";
 
 const NIVELES = [
   { value: "sedentario", label: "Sedentario" },
@@ -145,7 +145,7 @@ export default function RegisterPage() {
             <select
               className="rounded-xl bg-black/30 border border-white/10 text-white px-4 py-3 outline-none focus:border-emerald-400/40"
               value={form.sexo}
-              onChange={(e) => setForm((p) => ({ ...p, sexo: e.target.value as any }))}
+              onChange={(e) => setForm((p) => ({ ...p, sexo: e.target.value as "M" | "F" | "Otro" }))}
             >
               <option value="M">M</option>
               <option value="F">F</option>
@@ -262,4 +262,3 @@ export default function RegisterPage() {
     </GuestOnly>
   );
 }
-

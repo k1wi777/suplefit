@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import BrandLogo from "@/components/BrandLogo";
-import { clearToken } from "@/lib/token";
+import { usePathname } from "next/navigation";
+import BrandLogo from "@/shared/components/BrandLogo";
 
 export type AdminNavKey = "inventory" | "orders" | "analytics";
 
@@ -50,16 +49,17 @@ export default function AdminShell({
   title,
   subtitle,
   actions,
+  onLogout,
   children,
 }: {
   active: AdminNavKey;
   title: string;
   subtitle?: string;
   actions?: React.ReactNode;
+  onLogout: () => void;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
 
   return (
     <div className="min-h-[calc(100vh-52px)] bg-[#0a0a0a] relative overflow-x-hidden custom-scrollbar">
@@ -113,10 +113,7 @@ export default function AdminShell({
             <button
               type="button"
               className="text-left text-white/45 hover:text-red-300 text-xs font-semibold px-2 py-1 transition"
-              onClick={() => {
-                clearToken();
-                router.push("/login");
-              }}
+              onClick={onLogout}
             >
               Cerrar sesión
             </button>

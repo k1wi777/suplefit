@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import GlassCard from "@/components/GlassCard";
-import WeightDeltaBadge from "@/components/WeightDeltaBadge";
+import GlassCard from "@/shared/components/GlassCard";
+import WeightDeltaBadge from "./WeightDeltaBadge";
 import {
   enrichPesoHistorial,
   formatPesoDate,
@@ -12,7 +12,7 @@ import {
   getPesoUltimoHistorial,
   groupPesoByDay,
   type PesoRowRaw,
-} from "@/lib/weightHistory";
+} from "../utils/weightHistory";
 
 type Props = {
   historial: PesoRowRaw[];

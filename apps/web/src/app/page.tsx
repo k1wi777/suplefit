@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import GlassCard from "@/components/GlassCard";
+import GlassCard from "@/shared/components/GlassCard";
+import Image from "next/image";
 
 export default function Home() {
   return (
@@ -10,10 +11,12 @@ export default function Home() {
       <section className="relative w-full min-h-[90vh] flex flex-col justify-center overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
-          <img 
+          <Image 
             src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop" 
             alt="Atleta entrenando" 
-            className="w-full h-full object-cover object-top opacity-30"
+            fill
+            priority
+            className="object-cover object-top opacity-30"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-[#0a0a0a]/50"></div>
           <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent"></div>

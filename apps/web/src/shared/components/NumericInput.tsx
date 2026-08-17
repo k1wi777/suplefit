@@ -1,6 +1,6 @@
 "use client";
 
-import { useNumericInput } from "@/hooks/useNumericInput";
+import { useNumericInput } from "@/shared/hooks/useNumericInput";
 
 type Props = {
   value: number;

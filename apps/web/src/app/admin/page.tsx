@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { apiFetch } from "@/lib/api";
-import { clearToken, getToken } from "@/lib/token";
+import { apiFetch } from "@/shared/lib/api";
+import { clearToken, getToken } from "@/features/auth";
 import { useRouter } from "next/navigation";
-import AdminShell from "@/components/admin/AdminShell";
-import NumericInput from "@/components/NumericInput";
+import { AdminShell } from "@/features/admin";
+import NumericInput from "@/shared/components/NumericInput";
 
 type Category = {
   id: number;
@@ -88,21 +88,41 @@ export default function AdminPage() {
       router.push("/login");
       return;
     }
-    setLoading(true);
-    setError(null);
-    load()
-      .catch((e: { message?: string }) => {
-        setError(e?.message ?? "Error cargando admin");
-        clearToken();
-        router.push("/login");
-      })
-      .finally(() => setLoading(false));
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) {
+        setLoading(true);
+        setError(null);
+        load()
+          .catch((e: { message?: string }) => {
+            if (active) {
+              setError(e?.message ?? "Error cargando admin");
+              clearToken();
+              router.push("/login");
+            }
+          })
+          .finally(() => {
+            if (active) setLoading(false);
+          });
+      }
+    });
+    return () => {
+      active = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (!token) return;
-    load().catch(() => {});
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) {
+        load().catch(() => {});
+      }
+    });
+    return () => {
+      active = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qs]);
 
@@ -159,6 +179,10 @@ export default function AdminPage() {
       active="inventory"
       title="Inventario y catálogo"
       subtitle="Gestiona suplementos, stock y fichas de producto."
+      onLogout={() => {
+        clearToken();
+        router.push("/login");
+      }}
       actions={
         <>
           <div className="relative">

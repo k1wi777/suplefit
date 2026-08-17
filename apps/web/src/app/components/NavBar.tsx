@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
-import { AUTH_CHANGED_EVENT, clearToken, getToken } from "@/lib/token";
+import { apiFetch } from "@/shared/lib/api";
+import { AUTH_CHANGED_EVENT, clearToken, getToken } from "@/features/auth";
 import { useRouter } from "next/navigation";
-import { useCartCount } from "@/hooks/useCartCount";
-import BrandLogo from "@/components/BrandLogo";
+import { useCartCount } from "@/features/cart";
+import BrandLogo from "@/shared/components/BrandLogo";
 
 type MeResponse = {
   user: { id: number; nombre: string; objetivo: string };
@@ -92,18 +92,30 @@ export default function NavBar() {
   }, []);
 
   useEffect(() => {
-    refreshAuth();
-    const onAuth = () => refreshAuth();
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) refreshAuth();
+    });
+    const onAuth = () => {
+      if (active) refreshAuth();
+    };
     window.addEventListener(AUTH_CHANGED_EVENT, onAuth);
     window.addEventListener("storage", onAuth);
     return () => {
+      active = false;
       window.removeEventListener(AUTH_CHANGED_EVENT, onAuth);
       window.removeEventListener("storage", onAuth);
     };
   }, [refreshAuth]);
 
   useEffect(() => {
-    setMenuOpen(false);
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) setMenuOpen(false);
+    });
+    return () => {
+      active = false;
+    };
   }, [pathname]);
 
   const isLoggedIn = Boolean(token);

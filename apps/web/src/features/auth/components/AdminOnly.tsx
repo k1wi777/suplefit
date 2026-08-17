@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { apiFetch } from "@/lib/api";
-import { getToken } from "@/lib/token";
+import { apiFetch } from "@/shared/lib/api";
+import { getToken } from "../utils/token";
 
 type MeResponse = { isAdmin: boolean };
 

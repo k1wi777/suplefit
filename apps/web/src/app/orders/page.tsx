@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import GlassCard from "@/components/GlassCard";
-import { apiFetch } from "@/lib/api";
-import { getToken } from "@/lib/token";
+import GlassCard from "@/shared/components/GlassCard";
+import { apiFetch } from "@/shared/lib/api";
+import { getToken } from "@/features/auth";
 import { useRouter } from "next/navigation";
 
 type Order = {

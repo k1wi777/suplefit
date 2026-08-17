@@ -9,7 +9,7 @@ export type CartItem = {
 };
 
 const CART_KEY = "suplefit_cart";
-const CART_EVENT = "suplefit_cart_updated";
+export const CART_EVENT = "suplefit_cart_updated";
 
 function readRaw(): CartItem[] {
   if (typeof window === "undefined") return [];

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import GlassCard from "@/components/GlassCard";
+import GlassCard from "@/shared/components/GlassCard";
 
 const PLANES = [
   {

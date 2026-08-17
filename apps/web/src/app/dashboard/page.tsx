@@ -2,17 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import GlassCard from "@/components/GlassCard";
-import DisclaimerBanner from "@/components/DisclaimerBanner";
-import { apiFetch } from "@/lib/api";
-import { getToken, clearToken } from "@/lib/token";
+import GlassCard from "@/shared/components/GlassCard";
+import DisclaimerBanner from "@/shared/components/DisclaimerBanner";
+import { apiFetch } from "@/shared/lib/api";
+import { getToken, clearToken, AuthenticatedOnly } from "@/features/auth";
 import { useRouter } from "next/navigation";
-import AuthenticatedOnly from "@/components/AuthenticatedOnly";
-import WeightHistoryPanel from "@/components/WeightHistoryPanel";
-import WeightDeltaBadge from "@/components/WeightDeltaBadge";
-import RecommendedProductCard from "@/components/RecommendedProductCard";
-import NumericInput from "@/components/NumericInput";
-import { enrichPesoHistorial } from "@/lib/weightHistory";
+import { WeightHistoryPanel, WeightDeltaBadge, enrichPesoHistorial } from "@/features/weight-tracker";
+import { RecommendedProductCard } from "@/features/catalog";
+import NumericInput from "@/shared/components/NumericInput";
 
 type Me = {
   user: {

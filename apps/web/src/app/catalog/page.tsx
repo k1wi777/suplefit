@@ -2,9 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import GlassCard from "@/components/GlassCard";
-import { apiFetch } from "@/lib/api";
-import { addToCart } from "@/lib/cart";
+import { apiFetch } from "@/shared/lib/api";
+import { addToCart } from "@/features/cart";
 
 type Supplement = {
   id: number;
@@ -45,12 +44,26 @@ export default function CatalogPage() {
   }, [categorySlug, search]);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) {
+        setLoading(true);
+        setError(null);
+      }
+    });
     apiFetch<{ items: Supplement[] }>(`/api/supplements${qs}`)
-      .then((data) => setItems(data.items))
-      .catch((e: any) => setError(e?.message ?? "Error al cargar catálogo"))
-      .finally(() => setLoading(false));
+      .then((data) => {
+        if (active) setItems(data.items);
+      })
+      .catch((e: unknown) => {
+        if (active) setError(e instanceof Error ? e.message : "Error al cargar catálogo");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [qs]);
 
   return (
@@ -213,7 +226,7 @@ export default function CatalogPage() {
               La Ciencia de <span className="text-[#baff2e]">SupleFit</span>
             </h2>
             <p className="text-white/60 text-sm leading-relaxed mb-6">
-              Cada miligramo se contabiliza. No creemos en 'mezclas patentadas' confusas. Creemos en la transparencia radical y en dosis clínicas con base científica verificada.
+              Cada miligramo se contabiliza. No creemos en &apos;mezclas patentadas&apos; confusas. Creemos en la transparencia radical y en dosis clínicas con base científica verificada.
             </p>
             <div className="flex flex-col gap-4">
                <div className="flex items-start gap-4">

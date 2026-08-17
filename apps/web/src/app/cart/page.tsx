@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import GlassCard from "@/components/GlassCard";
-import DisclaimerBanner from "@/components/DisclaimerBanner";
-import { apiFetch } from "@/lib/api";
+import GlassCard from "@/shared/components/GlassCard";
+import DisclaimerBanner from "@/shared/components/DisclaimerBanner";
+import { apiFetch } from "@/shared/lib/api";
 import {
   clearCart,
   getCart,
@@ -14,8 +14,8 @@ import {
   subscribeCart,
   updateCartQty,
   type CartItem,
-} from "@/lib/cart";
-import { getToken } from "@/lib/token";
+} from "@/features/cart";
+import { getToken } from "@/features/auth";
 
 export default function CartPage() {
   const router = useRouter();
@@ -25,8 +25,17 @@ export default function CartPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    setItems(getCart());
-    return subscribeCart(() => setItems(getCart()));
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) setItems(getCart());
+    });
+    const unsubscribe = subscribeCart(() => {
+      if (active) setItems(getCart());
+    });
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
   const subtotal = getCartSubtotal();

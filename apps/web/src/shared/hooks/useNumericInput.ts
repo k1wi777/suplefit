@@ -26,25 +26,35 @@ export function useNumericInput(
   const allowDecimal = opts?.allowDecimal ?? true;
   const [text, setText] = useState(() => (Number.isFinite(value) ? String(value) : ""));
 
-  useEffect(() => {
-    const next = Number.isFinite(value) ? String(value) : "";
-    setText((prev) => {
-      const prevNum = parseDisplay(prev);
-      if (prevNum === value && prev !== "" && prev !== ".") return prev;
-      return next;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  const parseDisplay = useCallback(
+    (s: string): number => {
+      if (s === "" || s === ".") return opts?.min ?? 0;
+      const n = allowDecimal ? parseFloat(s) : parseInt(s, 10);
+      if (!Number.isFinite(n)) return opts?.min ?? 0;
+      let out = n;
+      if (opts?.min != null) out = Math.max(opts.min, out);
+      if (opts?.max != null) out = Math.min(opts.max, out);
+      return out;
+    },
+    [allowDecimal, opts]
+  );
 
-  function parseDisplay(s: string): number {
-    if (s === "" || s === ".") return opts?.min ?? 0;
-    const n = allowDecimal ? parseFloat(s) : parseInt(s, 10);
-    if (!Number.isFinite(n)) return opts?.min ?? 0;
-    let out = n;
-    if (opts?.min != null) out = Math.max(opts.min, out);
-    if (opts?.max != null) out = Math.min(opts.max, out);
-    return out;
-  }
+  useEffect(() => {
+    let active = true;
+    const next = Number.isFinite(value) ? String(value) : "";
+    Promise.resolve().then(() => {
+      if (active) {
+        setText((prev) => {
+          const prevNum = parseDisplay(prev);
+          if (prevNum === value && prev !== "" && prev !== ".") return prev;
+          return next;
+        });
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [value, parseDisplay]);
 
   const handleChange = useCallback(
     (raw: string) => {
@@ -52,14 +62,14 @@ export function useNumericInput(
       setText(cleaned);
       if (cleaned !== "" && cleaned !== ".") onChange(parseDisplay(cleaned));
     },
-    [allowDecimal, onChange, opts?.min, opts?.max]
+    [allowDecimal, onChange, parseDisplay]
   );
 
   const handleBlur = useCallback(() => {
     const n = parseDisplay(text);
     onChange(n);
     setText(String(n));
-  }, [text, onChange, opts?.min, opts?.max]);
+  }, [text, onChange, parseDisplay]);
 
   return { text, handleChange, handleBlur, parseDisplay };
 }

@@ -1,36 +1,217 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Harness
 
-## Getting Started
+Un arnés de desarrollo para proyectos asistidos por IA basado en **Spec Driven Development (SDD)** y **orquestación multiagente**.
 
-First, run the development server:
+Su objetivo no es generar código automáticamente, sino proporcionar una estructura donde distintos agentes colaboran de forma controlada, verificable y siempre bajo supervisión humana.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+El repositorio actúa como la fuente de verdad del sistema: toda la planificación, implementación y revisión queda documentada dentro del propio proyecto.
+
+---
+
+# Primeros pasos
+
+Para entender cómo se usa el harness en el día a día (aprobar planificaciones, continuar una sesión interrumpida, preguntas frecuentes), consulta **`docs/usage.md`**.
+
+1. Copia los archivos del harness (`AGENTS.md`, `docs/`, `agents/`, `init.sh`) dentro de tu proyecto.
+2. Ejecuta `./init.sh` para verificar el harness e inicializar `specs/` y `progress/`.
+3. Empieza a hablar con el agente describiendo lo que necesitas — actuará como Leader y coordinará el resto.
+
+---
+
+# Principios
+
+Este harness se construye sobre cuatro principios fundamentales.
+
+## 1. El repositorio es la memoria
+
+Los agentes no dependen del historial del chat.
+
+Toda la información relevante vive dentro del proyecto:
+
+- documentación
+- especificaciones
+- progreso
+- historial
+- estados
+
+Una conversación puede perderse.
+El repositorio no.
+
+---
+
+## 2. Un agente, una responsabilidad
+
+Cada agente posee un único objetivo.
+
+| Agente | Responsabilidad |
+|---------|-----------------|
+| Leader | Comprender la solicitud, coordinar el workflow y delegar. |
+| Spec Author | Transformar un Work Item en una planificación técnica. |
+| Implementer | Implementar únicamente la planificación aprobada. |
+| Reviewer | Validar que el trabajo cumple la planificación y las reglas del proyecto. |
+
+Ningún agente sustituye el trabajo de otro.
+
+---
+
+## 3. Spec Driven Development
+
+Todo trabajo sigue el mismo flujo base.
+
+```
+Usuario
+      │
+      ▼
+ Leader
+      │
+      ▼
+ meta.json
+      │
+      ▼
+Spec Author
+      │
+      ▼
+Planificación
+      │
+      ▼
+Aprobación humana
+      │
+      ▼
+Implementer
+      │
+      ▼
+Reviewer
+      │
+      ▼
+Finalización
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+El código nunca se implementa antes de existir una planificación aprobada.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> Este diagrama muestra la ruta principal. Las ramificaciones (rechazo en revisión, bloqueos) están documentadas en `docs/workflow.md`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+> El tramo `Usuario → Leader → meta.json` representa una negociación explícita, no una conversión automática — ver `docs/usage.md` (para el usuario) o `agents/leader.md` (protocolo del agente).
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 4. El humano siempre mantiene el control
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Ningún agente puede avanzar automáticamente entre etapas críticas.
 
-## Deploy on Vercel
+Toda planificación debe ser aprobada explícitamente antes de comenzar la implementación.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+La aprobación humana forma parte del workflow y nunca puede omitirse.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+# Organización del repositorio
+## Estructura
+
+```text
+.
+├── AGENTS.md                     # Punto de entrada para los agentes
+├── README.md                     # Descripción general del harness
+├── init.sh                       # Inicialización y verificación del entorno
+│
+├── docs/
+│   ├── architecture.md           # Principios de arquitectura
+│   ├── conventions.md            # Convenciones del proyecto
+│   ├── meta.md                   # Estructura de meta.json
+│   ├── progress.md               # Sistema de progreso
+│   ├── specs.md                  # Spec Driven Development
+│   ├── usage.md                  # Guía de uso para humanos
+│   ├── verification.md           # Reglas de verificación
+│   └── workflow.md               # Workflow del harness
+│
+├── specs/
+│   └── <work-item>/
+│       ├── meta.json             # Estado y metadatos del Work Item
+│       ├── requirements.md       # Requirements (solo Features)
+│       ├── design.md             # Diseño técnico (solo Features)
+│       ├── tasks.md              # Plan de implementación (solo Features)
+│       └── plan.md               # Plan simplificado (solo Tasks)
+│
+├── progress/
+│   ├── current.md                # Estado de la sesión actual
+│   ├── history.md                # Historial de sesiones
+│   ├── impl_<work-item>.md       # Reporte del Implementer
+│   ├── review_<work-item>.md     # Reporte del Reviewer
+│   └── spec_<work-item>.md       # Reporte de bloqueo del Spec Author (solo si aplica)
+│
+├── agents/
+│   ├── leader.md
+│   ├── spec_author.md
+│   ├── implementer.md
+│   └── reviewer.md
+│
+├── src/                          # Código fuente del proyecto
+├── tests/                        # Pruebas del proyecto
+└── ...
+```
+---
+
+# Work Items
+
+El harness trabaja sobre **Work Items**. Existen dos tipos, **Feature** y **Task**, según el nivel de planificación que requiere el cambio.
+
+Los criterios para elegir entre uno y otro, así como los estados y transiciones que sigue cada Work Item, están definidos en `docs/workflow.md`.
+
+---
+
+# Documentación
+
+La documentación está desacoplada por responsabilidad.
+
+| Documento | Propósito |
+|-----------|-----------|
+| workflow.md | Flujo completo del harness: tipos de Work Item, estados y transiciones. |
+| specs.md | Cómo se construyen las especificaciones. |
+| architecture.md | Principios de arquitectura del proyecto. |
+| conventions.md | Convenciones de desarrollo. |
+| verification.md | Reglas de validación del trabajo. |
+| progress.md | Funcionamiento del sistema de progreso. |
+| meta.md | Estructura y significado de `meta.json`. |
+
+
+Los agentes únicamente cargan la documentación necesaria para su etapa.
+
+---
+
+# Sistema de progreso
+
+El progreso del proyecto también vive dentro del repositorio.
+
+```
+progress/
+```
+
+contiene:
+
+- sesión actual
+- historial
+- reportes de implementación
+- revisiones
+
+Esto permite:
+
+- continuar sesiones interrumpidas
+- mantener trazabilidad
+- conservar un historial permanente del proyecto
+
+---
+
+# Filosofía del proyecto
+
+Este repositorio no pretende construir un asistente autónomo.
+
+Pretende construir un sistema donde:
+
+- los agentes tienen responsabilidades claras;
+- el contexto está distribuido;
+- la documentación es la fuente de verdad;
+- el humano conserva siempre el control del proceso.
+
+La IA no reemplaza el proceso de desarrollo.
+
+Lo sigue.

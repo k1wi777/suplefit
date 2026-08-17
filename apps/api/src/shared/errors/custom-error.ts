@@ -18,7 +18,7 @@ export class CustomError<C extends string = string> extends Error {
     isOperational?: boolean;
     details?: unknown;
   }) {
-    super(message);
+    super(message);//esto se vuelva un error nativo de JS, con stack trace y demás
     this.name = "CustomError";
     this.statusCode = statusCode;
     this.code = code;
