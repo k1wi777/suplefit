@@ -12,6 +12,7 @@ export default function LoginForm() {
   const nextPath = searchParams.get("next") || "/dashboard";
   const [correo, setCorreo] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -54,13 +55,35 @@ export default function LoginForm() {
 
         <label className="flex flex-col gap-2">
           <span className="text-white/70 text-sm">Contraseña</span>
-          <input
-            className="rounded-xl bg-black/30 border border-white/10 text-white px-4 py-3 outline-none focus:border-emerald-400/40"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            type="password"
-            required
-          />
+          <div className="relative">
+            <input
+              className="w-full rounded-xl bg-black/30 border border-white/10 text-white px-4 py-3 pr-12 outline-none focus:border-emerald-400/40"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              type={showPassword ? "text" : "password"}
+              required
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-white/50 transition hover:bg-white/10 hover:text-white"
+              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              onClick={() => setShowPassword((v) => !v)}
+            >
+              {showPassword ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                  <path d="M1 1l22 22" />
+                  <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              )}
+            </button>
+          </div>
         </label>
 
         {error ? <div className="text-red-300 text-sm">{error}</div> : null}

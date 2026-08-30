@@ -10,6 +10,7 @@ import Link from "next/link";
 import { AuthenticatedOnly } from "@/features/auth";
 import { WeightUpdateSection } from "@/features/weight-tracker";
 import NumericInput from "@/shared/components/NumericInput";
+import ConfirmModal from "@/shared/components/ConfirmModal";
 
 type Profile = {
   id: number;
@@ -60,6 +61,7 @@ export default function ProfilePage() {
   const [successSecurity, setSuccessSecurity] = useState(false);
   const [formPassword, setFormPassword] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const [form, setForm] = useState({
     nombre: "",
@@ -485,21 +487,9 @@ export default function ProfilePage() {
                           type="button"
                           disabled={deleting}
                           className="text-red-400 border border-red-400/30 px-4 py-2 rounded-xl text-xs font-bold uppercase hover:bg-red-400/10 disabled:opacity-50"
-                          onClick={async () => {
-                            if (!confirm("¿Eliminar tu cuenta y todos tus datos? Esta acción no se puede deshacer.")) return;
-                            setDeleting(true);
-                            try {
-                              await apiFetch("/api/users/profile", { method: "DELETE", token });
-                              clearToken();
-                              router.push("/");
-                            } catch (e: unknown) {
-                              setErrorSecurity(e instanceof Error ? e.message : "Error al eliminar");
-                            } finally {
-                              setDeleting(false);
-                            }
-                          }}
+                          onClick={() => setDeleteModalOpen(true)}
                         >
-                          {deleting ? "Eliminando..." : "Eliminar mi cuenta"}
+                          Eliminar mi cuenta
                         </button>
                       </div>
                     </div>
@@ -568,6 +558,33 @@ export default function ProfilePage() {
            </div>
         </div>
       </main>
+      <ConfirmModal
+        open={deleteModalOpen}
+        variant="danger"
+        title="¿Eliminar tu cuenta?"
+        description="Se borrarán permanentemente tu perfil, pedidos, recomendaciones y seguimiento de peso. Esta acción no se puede deshacer."
+        confirmLabel="Sí, eliminar cuenta"
+        cancelLabel="Cancelar"
+        loading={deleting}
+        onClose={() => {
+          if (!deleting) setDeleteModalOpen(false);
+        }}
+        onConfirm={async () => {
+          setDeleting(true);
+          setErrorSecurity(null);
+          try {
+            await apiFetch("/api/users/profile", { method: "DELETE", token });
+            clearToken();
+            setDeleteModalOpen(false);
+            router.push("/");
+          } catch (e: unknown) {
+            setErrorSecurity(e instanceof Error ? e.message : "Error al eliminar");
+            setDeleteModalOpen(false);
+          } finally {
+            setDeleting(false);
+          }
+        }}
+      />
     </AuthenticatedOnly>
   );
 }

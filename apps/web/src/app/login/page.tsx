@@ -7,7 +7,7 @@ import LoginForm from "./LoginForm";
 export default function LoginPage() {
   return (
     <GuestOnly>
-      <main className="flex-1 flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      <main className="flex-1 w-full flex items-center justify-center px-4 py-12 relative overflow-hidden min-h-[calc(100dvh-3.25rem)]">
         <div
           className="absolute inset-0 opacity-40"
           style={{

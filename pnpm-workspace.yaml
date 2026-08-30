@@ -2,6 +2,7 @@ packages:
   - "apps/api"
   - "apps/web"
 allowBuilds:
+  '@parcel/watcher': set this to true or false
   esbuild: true
   sharp: true
   unrs-resolver: true

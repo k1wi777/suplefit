@@ -25,12 +25,12 @@ export default function GuestOnly({ children }: { children: React.ReactNode }) {
 
   if (!ready) {
     return (
-      <div className="flex-1 flex items-center justify-center text-white/70">
+      <div className="flex flex-col flex-1 w-full min-h-[calc(100dvh-3.25rem)] items-center justify-center text-white/70">
         Redirigiendo...
       </div>
     );
   }
 
-  return <>{children}</>;
+  return <div className="flex flex-col flex-1 w-full">{children}</div>;
 }
 
