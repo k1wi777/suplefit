@@ -108,7 +108,7 @@ body {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #fff;
-  padding: 0.875rem 1rem;
+  padding: 0.875rem 2rem;
   outline: none;
   transition: border-color 0.2s;
   width: 100%;

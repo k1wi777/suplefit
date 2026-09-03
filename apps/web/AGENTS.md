@@ -14,7 +14,7 @@
 
 Antes de realizar cualquier modificación en el proyecto:
 
-1. Ejecuta `./init.sh`.
+1. Ejecuta `bash init.sh`.
 2. Si falla, DETENTE e informa el problema.
 3. Carga únicamente la documentación necesaria para la tarea actual siguiendo el orden de la Sección 8.
 
@@ -23,6 +23,8 @@ No continúes hasta completar estos pasos.
 ---
 
 # 2. Propósito del proyecto
+
+> **Personaliza esta sección** al adaptar el harness a tu repositorio. Describe el producto concreto, no el arnés.
 
 *Resume aquí el objetivo del proyecto. Esta información guía las decisiones del agente y evita cambios que contradigan la visión del producto.*
 
@@ -55,6 +57,8 @@ No continúes hasta completar estos pasos.
 
 # 3. Stack técnico
 
+> **Personaliza esta sección** con el stack y los comandos reales de tu proyecto.
+
 *Documenta únicamente la información técnica esencial para comprender el proyecto.*
 
 ## Tecnologías principales
@@ -86,7 +90,8 @@ No continúes hasta completar estos pasos.
 | `tests/` | Suite de pruebas. |
 | `specs/` | Work Items y planificación. |
 | `progress/` | Estado actual e historial del trabajo. |
-| `docs/` | Documentación del proyecto. |
+| `docs/harness/` | Documentación del arnés (workflow, specs, progreso). |
+| `docs/project/` | Documentación del proyecto (arquitectura, convenciones, verificación). |
 | `agents/` | Roles y comportamiento de los subagentes. |
 
 ---
@@ -97,7 +102,7 @@ Todo Work Item debe seguir el workflow definido por el proyecto.
 
 Antes de comenzar cualquier trabajo consulta:
 
-`docs/workflow.md`
+`docs/harness/workflow.md`
 
 **No omitas ninguna etapa del workflow.**
 
@@ -121,21 +126,38 @@ Ningún otro agente debe asumir estas responsabilidades.
 
 ---
 
-# 7. Documentación del proyecto
+# 7. Documentación
 
 Consulta únicamente la documentación necesaria para la tarea actual.
 
+## Documentación del harness
+
+Define cómo funciona el arnés. No requiere personalización por proyecto.
+
 | Si necesitas... | Consulta... |
 |-----------------|-------------|
-| Workflow del proyecto | `docs/workflow.md` |
-| Spec Driven Development | `docs/specs.md` |
-| Arquitectura | `docs/architecture.md` |
-| Convenciones | `docs/conventions.md` |
-| Verificación | `docs/verification.md` |
-| Estructura de `meta.json` | `docs/meta.md` |
-| Un Work Item concreto | `specs/<work-item>/` |
+| Workflow | `docs/harness/workflow.md` |
+| Spec Driven Development | `docs/harness/specs.md` |
+| Sistema de progreso | `docs/harness/progress.md` |
+| Estructura de `meta.json` | `docs/harness/meta.md` |
 | El comportamiento de un agente | `agents/<role>.md` |
 
+## Documentación del proyecto
+
+Describe las reglas de **este repositorio**. Debe personalizarse al implementar el harness.
+
+| Si necesitas... | Consulta... |
+|-----------------|-------------|
+| Arquitectura | `docs/project/architecture.md` |
+| Convenciones | `docs/project/conventions.md` |
+| Verificación | `docs/project/verification.md` |
+
+## Work Items
+
+| Si necesitas... | Consulta... |
+|-----------------|-------------|
+| Un Work Item concreto | `specs/<work-item>/` |
+|El comportamiento de un agente | `agents/<role>.md` |
 No cargues documentación que no aporte contexto a la tarea actual.
 
 ---

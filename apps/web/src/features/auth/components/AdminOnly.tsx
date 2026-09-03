@@ -3,33 +3,44 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { apiFetch } from "@/shared/lib/api";
+import { getLoginDestination, isAuthSession, type AuthState } from "@/shared/lib/auth-policy";
 import { getToken } from "../utils/token";
-
-type MeResponse = { isAdmin: boolean };
 
 export default function AdminOnly({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [ready, setReady] = useState(false);
+  const [authState, setAuthState] = useState<AuthState>("loading");
 
   useEffect(() => {
+    let active = true;
     const token = getToken();
     if (!token) {
-      router.replace(`/login?next=${encodeURIComponent(pathname || "/admin")}`);
+      router.replace(getLoginDestination(pathname || "/admin"));
       return;
     }
-    apiFetch<MeResponse>("/api/auth/me", { token })
+    apiFetch<unknown>("/api/auth/me", { token })
       .then((data) => {
+        if (!isAuthSession(data)) {
+          if (active) setAuthState("invalid");
+          router.replace(getLoginDestination(pathname || "/admin"));
+          return;
+        }
         if (!data.isAdmin) {
           router.replace("/dashboard");
           return;
         }
-        setReady(true);
+        if (active) setAuthState("admin");
       })
-      .catch(() => router.replace("/login"));
+      .catch(() => {
+        if (active) setAuthState("invalid");
+        router.replace(getLoginDestination(pathname || "/admin"));
+      });
+    return () => {
+      active = false;
+    };
   }, [pathname, router]);
 
-  if (!ready) {
+  if (authState !== "admin") {
     return (
       <div className="flex-1 flex items-center justify-center text-white/70 min-h-[50vh]">
         Verificando permisos de administrador...

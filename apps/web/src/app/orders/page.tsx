@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import GlassCard from "@/shared/components/GlassCard";
 import { apiFetch } from "@/shared/lib/api";
-import { getToken } from "@/features/auth";
+import { AuthenticatedOnly, getToken } from "@/features/auth";
 import { useRouter } from "next/navigation";
 
 type Order = {
@@ -33,8 +33,9 @@ export default function OrdersPage() {
   }, [router]);
 
   return (
-    <main className="flex-1 px-4 py-10 min-h-screen bg-[#050505]">
-      <div className="mx-auto max-w-2xl flex flex-col gap-6">
+    <AuthenticatedOnly>
+      <main className="flex-1 px-4 py-10 min-h-screen bg-[#050505]">
+        <div className="mx-auto max-w-2xl flex flex-col gap-6">
         <h1 className="text-white font-black text-3xl">Mis pedidos</h1>
         {loading ? <p className="text-white/60">Cargando...</p> : null}
         {error ? <p className="text-red-300">{error}</p> : null}
@@ -59,7 +60,8 @@ export default function OrdersPage() {
             </GlassCard>
           </Link>
         ))}
-      </div>
-    </main>
+        </div>
+      </main>
+    </AuthenticatedOnly>
   );
 }

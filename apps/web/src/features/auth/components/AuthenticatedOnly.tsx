@@ -2,29 +2,57 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { apiFetch } from "@/shared/lib/api";
+import { getLoginDestination, isAuthSession, type AuthState } from "@/shared/lib/auth-policy";
 import { getToken } from "../utils/token";
 
-export default function AuthenticatedOnly({ children }: { children: React.ReactNode }) {
+export default function AuthenticatedOnly({
+  children,
+  allowAnonymous = false,
+}: {
+  children: React.ReactNode;
+  allowAnonymous?: boolean;
+}) {
   const router = useRouter();
   const pathname = usePathname();
-  const [ready, setReady] = useState(false);
+  const [authState, setAuthState] = useState<AuthState>("loading");
 
   useEffect(() => {
     let active = true;
     const token = getToken();
     if (!token) {
-      router.replace(`/login?next=${encodeURIComponent(pathname || "/dashboard")}`);
+      if (allowAnonymous) {
+        Promise.resolve().then(() => {
+          if (active) setAuthState("anonymous");
+        });
+      } else {
+        router.replace(getLoginDestination(pathname || "/dashboard"));
+      }
       return;
     }
-    Promise.resolve().then(() => {
-      if (active) setReady(true);
-    });
+    apiFetch<unknown>("/api/auth/me", { token })
+      .then((data) => {
+        if (!isAuthSession(data)) {
+          if (active) setAuthState("invalid");
+          router.replace(getLoginDestination(pathname || "/dashboard"));
+          return;
+        }
+        if (data.isAdmin) {
+          router.replace("/admin");
+          return;
+        }
+        if (active) setAuthState("user");
+      })
+      .catch(() => {
+        if (active) setAuthState("invalid");
+        router.replace(getLoginDestination(pathname || "/dashboard"));
+      });
     return () => {
       active = false;
     };
-  }, [pathname, router]);
+  }, [allowAnonymous, pathname, router]);
 
-  if (!ready) {
+  if (authState !== "user" && !(authState === "anonymous" && allowAnonymous)) {
     return (
       <div className="flex-1 flex items-center justify-center text-white/70">
         Validando sesión...
@@ -34,4 +62,3 @@ export default function AuthenticatedOnly({ children }: { children: React.ReactN
 
   return <>{children}</>;
 }
-

@@ -4,7 +4,12 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import GlassCard from "@/shared/components/GlassCard";
 import { apiFetch } from "@/shared/lib/api";
-import { setToken } from "@/features/auth";
+import { getSafeDestination, setToken } from "@/features/auth";
+
+type LoginResponse = {
+  token: string;
+  user: { isAdmin: boolean };
+};
 
 export default function LoginForm() {
   const router = useRouter();
@@ -28,12 +33,15 @@ export default function LoginForm() {
           setError(null);
           setLoading(true);
           try {
-            const data = await apiFetch<{ token: string }>("/api/auth/login", {
+            const data = await apiFetch<LoginResponse>("/api/auth/login", {
               method: "POST",
               body: { correo, password },
             });
+            if (!data.token || typeof data.user?.isAdmin !== "boolean") {
+              throw new Error("No se pudo validar el rol de la cuenta.");
+            }
             setToken(data.token);
-            const dest = nextPath.startsWith("/") ? nextPath : "/dashboard";
+            const dest = getSafeDestination(nextPath, data.user.isAdmin ? "admin" : "user");
             router.push(dest);
           } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Error al iniciar sesión");

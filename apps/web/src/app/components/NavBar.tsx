@@ -4,16 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/shared/lib/api";
-import { AUTH_CHANGED_EVENT, clearToken, getToken } from "@/features/auth";
+import { AUTH_CHANGED_EVENT, clearToken, getToken, isAuthSession, type AuthSession, type AuthState } from "@/features/auth";
 import { useRouter } from "next/navigation";
 import { useCartCount } from "@/features/cart";
 import BrandLogo from "@/shared/components/BrandLogo";
 import ConfirmModal from "@/shared/components/ConfirmModal";
-
-type MeResponse = {
-  user: { id: number; nombre: string; objetivo: string };
-  isAdmin: boolean;
-};
 
 type NavItem = { href: string; label: string; match?: (path: string) => boolean };
 
@@ -31,6 +26,22 @@ const AUTH_LINKS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/profile", label: "Perfil" },
   { href: "/orders", label: "Pedidos", match: (p) => p === "/orders" || p.startsWith("/orders/") },
+];
+
+const ADMIN_LINKS: NavItem[] = [
+  {
+    href: "/admin",
+    label: "Dashboard",
+    match: (p) =>
+      (p === "/admin" || p.startsWith("/admin/")) &&
+      p !== "/admin/profile" &&
+      !p.startsWith("/admin/profile/"),
+  },
+  {
+    href: "/admin/profile",
+    label: "Cuenta",
+    match: (p) => p === "/admin/profile" || p.startsWith("/admin/profile/"),
+  },
 ];
 
 function isActive(pathname: string, item: NavItem): boolean {
@@ -99,25 +110,29 @@ export default function NavBar() {
   const router = useRouter();
   const pathname = usePathname();
   const cartCount = useCartCount();
-  const [token, setTokenState] = useState<string | null>(null);
-  const [me, setMe] = useState<MeResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [me, setMe] = useState<AuthSession | null>(null);
+  const [authState, setAuthState] = useState<AuthState>("loading");
   const [menuOpen, setMenuOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   const refreshAuth = useCallback(() => {
     const t = getToken();
-    setTokenState(t);
     if (!t) {
       setMe(null);
-      setLoading(false);
+      setAuthState("anonymous");
       return;
     }
-    setLoading(true);
-    apiFetch<MeResponse>("/api/auth/me", { token: t })
-      .then((data) => setMe(data))
-      .catch(() => setMe(null))
-      .finally(() => setLoading(false));
+    setAuthState("loading");
+    apiFetch<unknown>("/api/auth/me", { token: t })
+      .then((data) => {
+        const session = isAuthSession(data) ? data : null;
+        setMe(session);
+        setAuthState(session ? (session.isAdmin ? "admin" : "user") : "invalid");
+      })
+      .catch(() => {
+        setMe(null);
+        setAuthState("invalid");
+      });
   }, []);
 
   useEffect(() => {
@@ -147,8 +162,16 @@ export default function NavBar() {
     };
   }, [pathname]);
 
-  const isLoggedIn = Boolean(token);
-  const links = isLoggedIn ? AUTH_LINKS : PUBLIC_LINKS;
+  const loading = authState === "loading";
+  const isLoggedIn = authState === "user" || authState === "admin" || authState === "invalid";
+  const links =
+    authState === "anonymous"
+      ? PUBLIC_LINKS
+      : authState === "user"
+        ? AUTH_LINKS
+        : authState === "admin"
+          ? ADMIN_LINKS
+          : [];
 
   const handleLogout = () => {
     clearToken();
@@ -168,16 +191,6 @@ export default function NavBar() {
         </NavLink>
       ))}
 
-      {isLoggedIn && me?.isAdmin ? (
-        <NavLink
-          item={{
-            href: "/admin/orders",
-            label: "Admin",
-            match: (p) => p.startsWith("/admin"),
-          }}
-          pathname={pathname}
-        />
-      ) : null}
     </>
   );
 
@@ -254,7 +267,11 @@ export default function NavBar() {
         open={logoutModalOpen}
         variant="danger"
         title="¿Cerrar sesión?"
-        description="Saldrás de tu cuenta en este dispositivo. Tendrás que iniciar sesión de nuevo para acceder a tu dashboard, pedidos y recomendaciones."
+        description={
+          me?.isAdmin
+            ? "Saldrás de tu cuenta administrativa en este dispositivo."
+            : "Saldrás de tu cuenta en este dispositivo. Tendrás que iniciar sesión de nuevo para acceder a tu dashboard, pedidos y recomendaciones."
+        }
         confirmLabel="Sí, cerrar sesión"
         cancelLabel="Cancelar"
         onClose={() => setLogoutModalOpen(false)}

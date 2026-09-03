@@ -1,27 +1,43 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { getToken } from "../utils/token";
+import { useRouter, useSearchParams } from "next/navigation";
+import { apiFetch } from "@/shared/lib/api";
+import { getSafeDestination, isAuthSession } from "@/shared/lib/auth-policy";
+import { clearToken, getToken } from "../utils/token";
 
 export default function GuestOnly({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let active = true;
     const token = getToken();
-    if (token) {
-      router.replace("/dashboard");
+    if (!token) {
+      Promise.resolve().then(() => {
+        if (active) setReady(true);
+      });
       return;
     }
-    Promise.resolve().then(() => {
-      if (active) setReady(true);
-    });
+
+    apiFetch<unknown>("/api/auth/me", { token })
+      .then((data) => {
+        if (!isAuthSession(data)) {
+          clearToken();
+          if (active) setReady(true);
+          return;
+        }
+        router.replace(getSafeDestination(searchParams.get("next"), data.isAdmin ? "admin" : "user"));
+      })
+      .catch(() => {
+        clearToken();
+        if (active) setReady(true);
+      });
     return () => {
       active = false;
     };
-  }, [router]);
+  }, [router, searchParams]);
 
   if (!ready) {
     return (
@@ -33,4 +49,3 @@ export default function GuestOnly({ children }: { children: React.ReactNode }) {
 
   return <div className="flex flex-col flex-1 w-full">{children}</div>;
 }
-

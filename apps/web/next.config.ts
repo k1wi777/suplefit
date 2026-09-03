@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "placehold.co" },
       { protocol: "https", hostname: "cloudinary.images-iherb.com" },
       { protocol: "https", hostname: "media.falabella.com" },
+      { protocol: "https", hostname: "nutrafitcolombia.com" },
     ],
   },
 };

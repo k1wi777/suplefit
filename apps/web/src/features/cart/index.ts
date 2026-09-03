@@ -10,3 +10,5 @@ export {
   updateCartQty,
 } from "./utils/cart";
 export type { CartItem } from "./utils/cart";
+export { default as PayPalButton } from "./components/PayPalButton";
+export type { PayPalStatus } from "./components/PayPalButton";

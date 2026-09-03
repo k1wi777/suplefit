@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { AuthenticatedOnly } from "@/features/auth";
 import GlassCard from "@/shared/components/GlassCard";
 
 const PLANES = [
@@ -24,8 +27,9 @@ const PLANES = [
 
 export default function PlanesPage() {
   return (
-    <main className="flex-1 px-4 py-12 bg-[#050505] min-h-screen">
-      <div className="mx-auto max-w-4xl flex flex-col gap-8">
+    <AuthenticatedOnly allowAnonymous>
+      <main className="flex-1 px-4 py-12 bg-[#050505] min-h-screen">
+        <div className="mx-auto max-w-4xl flex flex-col gap-8">
         <div>
           <h1 className="text-white font-black text-4xl">Planes SupleFit</h1>
           <p className="text-white/60 mt-2 text-sm">
@@ -55,7 +59,8 @@ export default function PlanesPage() {
         <Link href="/catalog" className="neon-btn rounded-full px-8 py-3 text-sm font-bold w-fit">
           Explorar catálogo
         </Link>
-      </div>
-    </main>
+        </div>
+      </main>
+    </AuthenticatedOnly>
   );
 }

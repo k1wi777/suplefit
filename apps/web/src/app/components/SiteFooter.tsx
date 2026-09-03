@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import BrandLogo from "@/shared/components/BrandLogo";
-import { AUTH_CHANGED_EVENT, getToken } from "@/features/auth";
+import { apiFetch } from "@/shared/lib/api";
+import { AUTH_CHANGED_EVENT, getToken, isAuthSession, type AuthState } from "@/features/auth";
 
 type FooterLink = { href: string; label: string };
 
@@ -56,14 +57,32 @@ function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) 
 export default function SiteFooter() {
   const pathname = usePathname();
   const year = new Date().getFullYear();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authState, setAuthState] = useState<AuthState>("loading");
 
   useEffect(() => {
-    const refresh = () => setIsLoggedIn(Boolean(getToken()));
+    let active = true;
+    const refresh = () => {
+      const token = getToken();
+      if (!token) {
+        setAuthState("anonymous");
+        return;
+      }
+      setAuthState("loading");
+      apiFetch<unknown>("/api/auth/me", { token })
+        .then((data: unknown) => {
+          if (!active) return;
+          const session = isAuthSession(data) ? data : null;
+          setAuthState(session ? (session.isAdmin ? "admin" : "user") : "invalid");
+        })
+        .catch(() => {
+          if (active) setAuthState("invalid");
+        });
+    };
     refresh();
     window.addEventListener(AUTH_CHANGED_EVENT, refresh);
     window.addEventListener("storage", refresh);
     return () => {
+      active = false;
       window.removeEventListener(AUTH_CHANGED_EVENT, refresh);
       window.removeEventListener("storage", refresh);
     };
@@ -71,7 +90,7 @@ export default function SiteFooter() {
 
   if (pathname.startsWith("/admin")) return null;
 
-  const exploreLinks = isLoggedIn ? AUTH_EXPLORE_LINKS : PUBLIC_EXPLORE_LINKS;
+  const exploreLinks = authState === "user" ? AUTH_EXPLORE_LINKS : authState === "anonymous" ? PUBLIC_EXPLORE_LINKS : [];
 
   return (
     <footer className="mt-auto relative border-t border-slate-700/60 bg-gradient-to-b from-[#0b1018] via-[#080c12] to-[#050709] overflow-hidden">
@@ -97,19 +116,21 @@ export default function SiteFooter() {
             </div>
           </div>
 
-          <div className="lg:col-span-2 lg:col-start-6">
-            <FooterColumn title="Explorar" links={exploreLinks} />
-          </div>
+          {exploreLinks.length > 0 ? (
+            <div className="lg:col-span-2 lg:col-start-6">
+              <FooterColumn title="Explorar" links={exploreLinks} />
+            </div>
+          ) : null}
 
-          {isLoggedIn ? (
+          {authState === "user" ? (
             <div className="lg:col-span-2">
               <FooterColumn title="Tu espacio" links={ACCOUNT_LINKS} />
             </div>
           ) : null}
 
-          <div className={`lg:col-span-2 ${isLoggedIn ? "" : "lg:col-start-8"}`}>
+          <div className={`lg:col-span-2 ${authState === "user" ? "" : "lg:col-start-8"}`}>
             <FooterColumn title="Legal" links={LEGAL_LINKS} />
-            {!isLoggedIn ? (
+            {authState === "anonymous" ? (
               <ul className="mt-6 space-y-2.5">
                 <li>
                   <Link href="/login" className="text-sm text-slate-400 transition-colors hover:text-slate-200">

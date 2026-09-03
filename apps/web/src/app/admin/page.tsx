@@ -187,7 +187,7 @@ export default function AdminPage() {
         <>
           <div className="relative">
             <input
-              className="admin-input w-full sm:w-64 pl-10 text-sm"
+              className="admin-input w-full sm:w-64 pl-20 text-sm "
               placeholder="Buscar suplementos..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
