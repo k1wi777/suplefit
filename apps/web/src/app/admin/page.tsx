@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch } from "@/shared/lib/api";
 import { clearToken, getToken } from "@/features/auth";
 import { useRouter } from "next/navigation";
-import { AdminShell } from "@/features/admin";
-import NumericInput from "@/shared/components/NumericInput";
+import { AdminProductModal, AdminShell } from "@/features/admin";
+import type { AdminProductForm } from "@/features/admin";
 
 type Category = {
   id: number;
@@ -52,9 +52,12 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"create" | "edit">("create");
+  const [modalOpen, setModalOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const savingRef = useRef(false);
 
-  const [form, setForm] = useState({
-    id: undefined as number | undefined,
+  const [form, setForm] = useState<AdminProductForm>({
+    id: undefined,
     nombre: "",
     descripcion: "",
     beneficios: "",
@@ -65,6 +68,10 @@ export default function AdminPage() {
     precio: 0,
     stock: 0,
   });
+
+  useEffect(() => {
+    savingRef.current = saving;
+  }, [saving]);
 
   const qs = useMemo(() => {
     const params = new URLSearchParams();
@@ -126,9 +133,7 @@ export default function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qs]);
 
-  function resetForm() {
-    setMode("create");
-    setForm({
+  const getEmptyForm = useCallback((): AdminProductForm => ({
       id: undefined,
       nombre: "",
       descripcion: "",
@@ -139,8 +144,43 @@ export default function AdminPage() {
       categoriaSlug: categories[0]?.slug ?? "creatina",
       precio: 0,
       stock: 0,
+    }), [categories]);
+
+  const openCreate = useCallback((trigger?: HTMLButtonElement) => {
+    triggerRef.current = trigger ?? null;
+    setMode("create");
+    setForm(getEmptyForm());
+    setError(null);
+    setModalOpen(true);
+  }, [getEmptyForm]);
+
+  const openEdit = useCallback((s: Supplement, trigger?: HTMLButtonElement) => {
+    triggerRef.current = trigger ?? null;
+    setMode("edit");
+    setForm({
+      id: s.id,
+      beneficios: s.beneficios ?? "",
+      modoUso: s.modo_uso ?? "",
+      advertencias: s.advertencias ?? "",
+      imagenUrl: s.imagen_url ?? "",
+      categoriaSlug:
+        s.categoriaSlug ??
+        categories.find((c) => c.id === s.categoria_id)?.slug ??
+        "creatina",
+      nombre: s.nombre,
+      descripcion: s.descripcion,
+      precio: Number(s.precio),
+      stock: s.stock,
     });
-  }
+    setError(null);
+    setModalOpen(true);
+  }, [categories]);
+
+  const closeModal = useCallback(() => {
+    if (savingRef.current) return;
+    setModalOpen(false);
+    setError(null);
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -165,7 +205,9 @@ export default function AdminPage() {
         if (!form.id) throw new Error("ID no definido para editar");
         await apiFetch(`/api/admin/supplements/${form.id}`, { token, method: "PUT", body });
       }
-      resetForm();
+      setForm(getEmptyForm());
+      setMode("create");
+      setModalOpen(false);
       await load();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error al guardar suplemento");
@@ -179,6 +221,7 @@ export default function AdminPage() {
       active="inventory"
       title="Inventario y catálogo"
       subtitle="Gestiona suplementos, stock y fichas de producto."
+      onNewProduct={openCreate}
       onLogout={() => {
         clearToken();
         router.push("/login");
@@ -207,7 +250,8 @@ export default function AdminPage() {
           </div>
           <button
             type="button"
-            onClick={resetForm}
+            aria-haspopup="dialog"
+            onClick={(event) => openCreate(event.currentTarget)}
             className="rounded-xl bg-[#baff2e] hover:bg-[#d4ff63] text-black font-black px-5 py-3 text-xs uppercase tracking-wide transition whitespace-nowrap"
           >
             + Nuevo producto
@@ -221,158 +265,8 @@ export default function AdminPage() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(300px,380px)_1fr] gap-6 lg:gap-8">
-            {/* Formulario */}
-            <aside
-              className="panel-gradient-admin-form rounded-2xl border border-white/[0.08] backdrop-blur-xl p-6 md:p-7 shadow-[0_12px_48px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)] xl:sticky xl:top-[5.5rem] xl:self-start"
-            >
-              <h2 className="text-white font-black text-xl uppercase tracking-tight">
-                {mode === "create" ? "Nuevo suplemento" : "Editar suplemento"}
-              </h2>
-              <p className="text-white/40 text-xs mt-1 mb-6">
-                {mode === "edit" ? `ID #${form.id}` : "Completa los campos y guarda"}
-              </p>
-
-              <form className="flex flex-col gap-5" onSubmit={submit}>
-                <fieldset className="space-y-4">
-                  <legend className="text-[#baff2e] text-[10px] font-black uppercase tracking-[0.2em] mb-3 block w-full border-b border-white/10 pb-2">
-                    Datos del producto
-                  </legend>
-
-                  <label className="flex flex-col gap-1.5">
-                    <span className="text-white/45 text-[10px] font-bold uppercase tracking-widest">Nombre</span>
-                    <input
-                      className="admin-input"
-                      value={form.nombre}
-                      onChange={(e) => setForm((p) => ({ ...p, nombre: e.target.value }))}
-                      required
-                    />
-                  </label>
-
-                  <label className="flex flex-col gap-1.5">
-                    <span className="text-white/45 text-[10px] font-bold uppercase tracking-widest">Categoría</span>
-                    <select
-                      className="admin-input"
-                      value={form.categoriaSlug}
-                      onChange={(e) => setForm((p) => ({ ...p, categoriaSlug: e.target.value }))}
-                    >
-                      {categories.map((c) => (
-                        <option key={c.id} value={c.slug} className="bg-[#111]">
-                          {c.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className="flex flex-col gap-1.5">
-                      <span className="text-white/45 text-[10px] font-bold uppercase tracking-widest">Precio</span>
-                      <NumericInput
-                        allowDecimal
-                        min={0}
-                        className="admin-input"
-                        value={form.precio}
-                        onChange={(precio) => setForm((p) => ({ ...p, precio }))}
-                        required
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1.5">
-                      <span className="text-white/45 text-[10px] font-bold uppercase tracking-widest">Stock</span>
-                      <NumericInput
-                        allowDecimal={false}
-                        min={0}
-                        className="admin-input"
-                        value={form.stock}
-                        onChange={(stock) => setForm((p) => ({ ...p, stock }))}
-                        required
-                      />
-                    </label>
-                  </div>
-
-                  <label className="flex flex-col gap-1.5">
-                    <span className="text-white/45 text-[10px] font-bold uppercase tracking-widest">Descripción</span>
-                    <textarea
-                      rows={3}
-                      className="admin-input resize-none"
-                      value={form.descripcion}
-                      onChange={(e) => setForm((p) => ({ ...p, descripcion: e.target.value }))}
-                      required
-                    />
-                  </label>
-
-                  <label className="flex flex-col gap-1.5">
-                    <span className="text-white/45 text-[10px] font-bold uppercase tracking-widest">Imagen URL</span>
-                    <input
-                      className="admin-input text-sm"
-                      value={form.imagenUrl}
-                      onChange={(e) => setForm((p) => ({ ...p, imagenUrl: e.target.value }))}
-                      placeholder="https://..."
-                    />
-                  </label>
-                </fieldset>
-
-                <fieldset className="space-y-4">
-                  <legend className="text-[#baff2e] text-[10px] font-black uppercase tracking-[0.2em] mb-3 block w-full border-b border-white/10 pb-2">
-                    Contenido de ficha
-                  </legend>
-
-                  <label className="flex flex-col gap-1.5">
-                    <span className="text-white/45 text-[10px] font-bold uppercase tracking-widest">Beneficios</span>
-                    <textarea
-                      rows={2}
-                      className="admin-input resize-none text-sm"
-                      value={form.beneficios}
-                      onChange={(e) => setForm((p) => ({ ...p, beneficios: e.target.value }))}
-                      placeholder="Título: descripción (una línea por ítem)"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1.5">
-                    <span className="text-white/45 text-[10px] font-bold uppercase tracking-widest">Modo de uso</span>
-                    <textarea
-                      rows={2}
-                      className="admin-input resize-none text-sm"
-                      value={form.modoUso}
-                      onChange={(e) => setForm((p) => ({ ...p, modoUso: e.target.value }))}
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1.5">
-                    <span className="text-white/45 text-[10px] font-bold uppercase tracking-widest">Advertencias</span>
-                    <textarea
-                      rows={2}
-                      className="admin-input resize-none text-sm"
-                      value={form.advertencias}
-                      onChange={(e) => setForm((p) => ({ ...p, advertencias: e.target.value }))}
-                    />
-                  </label>
-                </fieldset>
-
-                <div className="flex flex-col gap-2 pt-2">
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="w-full rounded-xl bg-[#baff2e] hover:bg-[#d4ff63] disabled:opacity-50 text-black font-black py-4 text-sm uppercase tracking-wide shadow-[0_0_28px_rgba(186,255,46,0.35)] transition"
-                  >
-                    {saving
-                      ? "Guardando..."
-                      : mode === "create"
-                        ? "Guardar suplemento"
-                        : "Actualizar suplemento"}
-                  </button>
-                  {mode === "edit" ? (
-                    <button
-                      type="button"
-                      onClick={resetForm}
-                      className="w-full rounded-xl border border-white/15 text-white/60 hover:text-white py-2.5 text-xs font-bold uppercase tracking-wide transition"
-                    >
-                      Cancelar edición
-                    </button>
-                  ) : null}
-                </div>
-              </form>
-            </aside>
-
-            {/* Catálogo */}
-            <section className="panel-gradient-admin-catalog rounded-2xl border border-white/[0.08] backdrop-blur-xl p-6 md:p-7 shadow-[0_12px_48px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)] min-h-[400px]">
+      {/* Catálogo */}
+      <section className="panel-gradient-admin-catalog rounded-2xl border border-white/[0.08] backdrop-blur-xl p-6 md:p-7 shadow-[0_12px_48px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)] min-h-[400px]">
               <div className="flex items-end justify-between gap-4 mb-6">
                 <div>
                   <h2 className="text-white font-black text-2xl md:text-3xl tracking-tight">Catálogo</h2>
@@ -393,7 +287,7 @@ export default function AdminPage() {
                 </div>
               ) : items.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-white/15 py-16 text-center text-white/45 text-sm">
-                  No hay suplementos. Crea el primero con el formulario.
+                  No hay suplementos. Crea el primero desde el botón de nuevo producto.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
@@ -445,25 +339,7 @@ export default function AdminPage() {
                           <button
                             type="button"
                             className="flex-1 rounded-xl bg-[#baff2e] hover:bg-[#d4ff63] text-black text-xs font-black py-2.5 uppercase tracking-wide transition"
-                            onClick={() => {
-                              setMode("edit");
-                              setForm({
-                                id: s.id,
-                                beneficios: s.beneficios ?? "",
-                                modoUso: s.modo_uso ?? "",
-                                advertencias: s.advertencias ?? "",
-                                imagenUrl: s.imagen_url ?? "",
-                                categoriaSlug:
-                                  s.categoriaSlug ??
-                                  categories.find((c) => c.id === s.categoria_id)?.slug ??
-                                  "creatina",
-                                nombre: s.nombre,
-                                descripcion: s.descripcion,
-                                precio: Number(s.precio),
-                                stock: s.stock,
-                              });
-                              window.scrollTo({ top: 0, behavior: "smooth" });
-                            }}
+                            onClick={(event) => openEdit(s, event.currentTarget)}
                           >
                             Editar
                           </button>
@@ -492,8 +368,22 @@ export default function AdminPage() {
                   ))}
                 </div>
               )}
-            </section>
-      </div>
+      </section>
+
+      {modalOpen ? (
+        <AdminProductModal
+          open
+          mode={mode}
+          form={form}
+          categories={categories}
+          saving={saving}
+          error={error}
+          onChange={(update) => setForm(update)}
+          onSubmit={submit}
+          onRequestClose={closeModal}
+          returnFocusRef={triggerRef}
+        />
+      ) : null}
     </AdminShell>
   );
 }

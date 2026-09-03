@@ -49,6 +49,7 @@ export default function AdminShell({
   title,
   subtitle,
   actions,
+  onNewProduct,
   onLogout,
   children,
 }: {
@@ -56,6 +57,7 @@ export default function AdminShell({
   title: string;
   subtitle?: string;
   actions?: React.ReactNode;
+  onNewProduct?: (trigger: HTMLButtonElement) => void;
   onLogout: () => void;
   children: React.ReactNode;
 }) {
@@ -98,12 +100,23 @@ export default function AdminShell({
           </nav>
 
           <div className="hidden lg:flex flex-col gap-2 p-4 mt-auto border-t border-white/[0.06]">
-            <Link
-              href="/admin"
-              className="rounded-xl bg-[#baff2e] hover:bg-[#d4ff63] text-black font-black text-center py-3 text-xs uppercase tracking-wide transition"
-            >
-              + Nuevo producto
-            </Link>
+            {onNewProduct ? (
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                onClick={(event) => onNewProduct(event.currentTarget)}
+                className="rounded-xl bg-[#baff2e] hover:bg-[#d4ff63] text-black font-black text-center py-3 text-xs uppercase tracking-wide transition"
+              >
+                + Nuevo producto
+              </button>
+            ) : (
+              <Link
+                href="/admin"
+                className="rounded-xl bg-[#baff2e] hover:bg-[#d4ff63] text-black font-black text-center py-3 text-xs uppercase tracking-wide transition"
+              >
+                + Nuevo producto
+              </Link>
+            )}
             <Link
               href="/catalog"
               className="text-white/45 hover:text-white text-xs font-semibold px-2 py-1 transition"
