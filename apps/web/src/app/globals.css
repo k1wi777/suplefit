@@ -28,9 +28,9 @@ body {
 /* Fondo premium dark + brillos sutiles */
 @media (prefers-color-scheme: dark) {
   body {
-    background: radial-gradient(1000px 600px at 10% 0%, rgba(0, 255, 180, 0.12), transparent 50%),
-      radial-gradient(900px 600px at 90% 10%, rgba(0, 120, 255, 0.12), transparent 45%),
-      linear-gradient(180deg, #050505 0%, #0b0b0b 60%, #060606 100%);
+    background: radial-gradient(700px 420px at 18% 0%, rgba(186, 255, 46, 0.035), transparent 62%),
+      radial-gradient(700px 460px at 88% 12%, rgba(255, 255, 255, 0.018), transparent 60%),
+      linear-gradient(180deg, #050505 0%, #090a09 60%, #050505 100%);
   }
 }
 
@@ -121,8 +121,8 @@ body {
 .neon-text {
   color: #baff2e;
   text-shadow:
-    0 0 12px rgba(186, 255, 46, 0.42),
-    0 0 28px rgba(186, 255, 46, 0.25);
+    0 0 10px rgba(186, 255, 46, 0.28),
+    0 0 20px rgba(186, 255, 46, 0.12);
 }
 
 .neon-btn {
@@ -130,14 +130,14 @@ body {
   color: #101410;
   font-weight: 700;
   box-shadow:
-    0 10px 30px rgba(171, 236, 39, 0.25),
+    0 10px 30px rgba(171, 236, 39, 0.16),
     0 0 0 1px rgba(220, 255, 130, 0.35) inset;
 }
 
 .neon-btn:hover {
   transform: translateY(-1px);
   box-shadow:
-    0 16px 34px rgba(171, 236, 39, 0.3),
+    0 16px 34px rgba(171, 236, 39, 0.2),
     0 0 0 1px rgba(220, 255, 130, 0.45) inset;
 }
 
@@ -213,4 +213,3 @@ html.custom-scrollbar body {
   scrollbar-width: thin;
   scrollbar-color: rgba(186, 255, 46, 0.4) rgba(10, 10, 10, 0.9);
 }
-

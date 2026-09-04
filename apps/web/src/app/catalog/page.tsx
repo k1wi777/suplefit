@@ -67,87 +67,61 @@ export default function CatalogPage() {
   }, [qs]);
 
   return (
-    <main className="flex-1 px-4 py-10 w-full min-h-screen bg-[#050505] relative overflow-hidden">
+    <main className="flex-1 px-4 py-8 md:py-10 w-full min-h-screen bg-[#070807] relative overflow-hidden">
       {/* Glow effects de fondo */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#baff2e]/5 blur-[150px] rounded-full pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-sky-500/5 blur-[120px] rounded-full pointer-events-none"></div>
+      <div className="absolute top-[-6%] left-[15%] w-[26%] h-[30%] bg-[rgba(186,255,46,0.035)] blur-[120px] rounded-full pointer-events-none"></div>
+      <div className="absolute bottom-[-8%] right-[8%] w-[24%] h-[24%] bg-[rgba(255,255,255,0.02)] blur-[110px] rounded-full pointer-events-none"></div>
 
-      <div className="mx-auto max-w-6xl relative z-10 flex flex-col gap-10">
-        
-        {/* Header y Search */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 animate-fade-in-up">
-          <div className="max-w-xl">
-            <h1 className="text-white font-black text-4xl md:text-5xl tracking-tight leading-none mb-3">
-              Ecosistema de <br/> <span className="neon-text">Suplementos</span>
-            </h1>
-            <p className="text-white/60 text-sm md:text-base leading-relaxed">
-              Complementos deportivos por función: recuperación, proteína, energía y soporte nutricional. Lenguaje responsable y sin promesas médicas.
-            </p>
+      <div className="mx-auto max-w-6xl relative z-10 flex flex-col gap-8">
+
+        {/* Header y búsqueda */}
+        <div className="flex flex-col gap-6 animate-fade-in-up">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            <div className="max-w-3xl">
+              <h1 className="text-white font-black text-4xl md:text-5xl tracking-tight leading-none mb-3">
+                Ecosistema de <span className="neon-text">Suplementos</span>
+              </h1>
+              <p className="text-white/60 text-sm md:text-base leading-relaxed max-w-2xl">
+                Complementos deportivos por función: recuperación, proteína, energía y soporte nutricional. Lenguaje responsable y sin promesas médicas.
+              </p>
+            </div>
+
+            <div className="w-full lg:w-auto shrink-0 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3.5 shadow-[0_12px_30px_rgba(0,0,0,0.18)]">
+              <div className="text-white/45 text-[10px] font-semibold uppercase tracking-widest">Total suplementos</div>
+              <div className="mt-1 text-[#baff2e] text-xl font-black tracking-tight">
+                {loading ? "—" : `${items.length} productos`}
+              </div>
+            </div>
           </div>
 
-          <div className="flex w-full lg:w-auto items-center gap-3">
-            <div className="relative w-full lg:w-80">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              </div>
-              <input
-                className="w-full bg-white/5 border border-white/10 rounded-full text-white pl-12 pr-4 py-3.5 outline-none focus:bg-white/10 focus:border-[#baff2e]/40 transition-all text-sm"
-                placeholder="Buscar ingrediente, producto..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+          <div className="relative w-full max-w-3xl">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </div>
-            <button className="h-12 px-6 rounded-full neon-btn text-sm font-bold uppercase tracking-wide shrink-0">
-              Go
-            </button>
+            <input
+              className="w-full bg-white/5 border border-white/10 rounded-xl text-white pl-12 pr-4 py-3.5 outline-none focus:bg-white/10 focus:border-[#baff2e]/40 transition-all text-sm"
+              placeholder="Buscar ingrediente, producto..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
         </div>
 
-        {/* Featured Stack (Mock Visual) */}
-        {!categorySlug && !search && (
-          <div className="w-full rounded-[2rem] border border-white/10 relative overflow-hidden bg-black card-hover animate-fade-in-up animation-delay-100 flex flex-col md:flex-row items-center">
-            <div className="absolute inset-0 z-0">
-               <div className="absolute top-1/2 left-1/2 -transform-x-1/2 -transform-y-1/2 w-[80%] h-[80%] bg-[#baff2e]/10 blur-[100px] rounded-full pointer-events-none"></div>
-            </div>
-            <div className="p-8 md:p-12 z-10 md:w-1/2 flex flex-col items-start justify-center">
-               <div className="px-3 py-1 rounded-sm bg-[#baff2e] text-black text-[10px] font-black uppercase tracking-widest mb-4">
-                 Featured Stack
-               </div>
-               <h2 className="text-white text-3xl md:text-5xl font-black mb-4">Elite Stack 2024</h2>
-               <p className="text-white/70 text-sm mb-8 leading-relaxed max-w-md">
-                 El protocolo definitivo para la hipertrofia muscular y la recuperación neuronal. Presenta Neo-Form Whey, Creatina micronizada y Nitro-Pump.
-               </p>
-               <button className="glass rounded-full px-6 py-3 text-white text-sm font-bold uppercase tracking-widest flex items-center gap-3 hover:bg-white/10 transition-all">
-                 Ver Detalles
-                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-               </button>
-            </div>
-            <div className="md:w-1/2 h-64 md:h-full min-h-[300px] relative z-10 w-full flex items-center justify-center px-4 overflow-hidden">
-               {/* Gráfico representativo o imagen conceptual (Mock) */}
-               <div className="absolute w-[120%] h-[200%] border-[0.5px] border-[#baff2e]/20 rotate-[35deg] pointer-events-none"></div>
-               <div className="absolute w-[120%] h-[200%] border-[0.5px] border-[#baff2e]/20 -rotate-[35deg] pointer-events-none"></div>
-               
-               <div className="relative text-[#baff2e]/40 font-black text-6xl rotate-[-10deg] select-none">
-                 PRO <br/> PROTEIN
-               </div>
-            </div>
-          </div>
-        )}
-
         {/* Category Pills */}
-        <div className="animate-fade-in-up animation-delay-200">
-          <h3 className="text-white font-bold text-xl mb-4">Selección de Categoría</h3>
-          <div className="flex flex-wrap gap-2 md:gap-3">
+        <div className="animate-fade-in-up animation-delay-200 border-t border-white/10 pt-6">
+          <h3 className="text-white/70 font-bold text-xs uppercase tracking-[0.18em] mb-3">Selección de Categoría</h3>
+          <div className="flex flex-wrap gap-2">
             {CATEGORY_FILTERS.map((c) => {
               const isActive = (categorySlug === c.slug) || (!categorySlug && c.slug === "");
               return (
                 <button
                   key={c.label}
                   type="button"
-                  className={`px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${
+                  aria-pressed={isActive}
+                  className={`rounded-lg border px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#baff2e] ${
                     isActive
-                      ? "bg-[#baff2e] text-black shadow-[0_0_15px_rgba(186,255,46,0.3)]"
-                      : "bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
+                      ? "border-[#baff2e]/70 bg-[#baff2e] text-black shadow-[0_0_12px_rgba(186,255,46,0.18)]"
+                      : "border-white/10 bg-white/[0.04] text-white/65 hover:border-white/25 hover:bg-white/[0.08] hover:text-white"
                   }`}
                   onClick={() => setCategorySlug(c.slug)}
                 >
@@ -177,27 +151,34 @@ export default function CatalogPage() {
           {!loading && items.map((s) => (
             <div
               key={s.id}
-              className="glass rounded-3xl p-5 border border-white/10 hover:border-white/30 transition-all duration-500 group flex flex-col relative"
+              className="group card-hover relative flex flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02]"
             >
-              <Link href={`/supplements/${s.id}`} className="flex flex-col flex-1">
-                <div className="w-full aspect-[4/3] rounded-2xl bg-gradient-to-br from-black/80 to-white/5 border border-white/5 overflow-hidden flex items-center justify-center relative">
+              <div className="absolute top-0 right-0 w-28 h-28 bg-[#baff2e]/10 blur-[60px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Link href={`/supplements/${s.id}`} className="relative flex flex-col flex-1">
+                <div className="relative w-full aspect-[4/3] overflow-hidden border-b border-white/10 bg-black/60 flex items-center justify-center">
                   {s.imagen_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={s.imagen_url} alt={s.nombre} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <img src={s.imagen_url} alt={s.nombre} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   ) : (
-                    <div className="text-white/20 text-xs font-bold uppercase tracking-widest">Sin Imagen</div>
+                    <div className="h-full w-full flex items-center justify-center text-white/25 text-[10px] font-black uppercase tracking-widest">
+                      Sin imagen
+                    </div>
                   )}
-                  <div className="absolute top-3 left-3 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-black/60 text-[#baff2e] backdrop-blur-md border border-[#baff2e]/30">
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-80" />
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-black/70 text-[#baff2e] backdrop-blur-md border border-[#baff2e]/30">
                     {s.categoriaNombre ?? s.categoriaSlug ?? "Complemento"}
                   </div>
                 </div>
-                <div className="mt-5 flex-1">
-                  <h3 className="text-white font-black text-lg leading-tight mb-2 group-hover:text-[#baff2e] transition-colors">{s.nombre}</h3>
-                  <p className="text-white/50 text-xs line-clamp-2 leading-relaxed">{s.descripcion}</p>
+                <div className="relative z-10 flex flex-col flex-1 p-5">
+                  <h3 className="text-white font-black text-lg leading-tight mb-2 group-hover:text-[#baff2e] transition-colors line-clamp-2">{s.nombre}</h3>
+                  <p className="text-white/50 text-xs line-clamp-2 leading-relaxed flex-1">{s.descripcion}</p>
+                  <span className="mt-4 text-[10px] font-black uppercase tracking-widest text-white/40 group-hover:text-[#baff2e] transition-colors">
+                    Ver detalle →
+                  </span>
                 </div>
               </Link>
-              <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-4">
-                <div className="text-white font-medium text-lg">${Number(s.precio).toFixed(2)}</div>
+              <div className="relative z-10 mt-auto flex items-center justify-between border-t border-white/10 px-5 pb-5 pt-4">
+                <div className="text-[#baff2e] font-black text-xl tracking-tight">${Number(s.precio).toFixed(2)}</div>
                 <button
                   type="button"
                   disabled={s.stock <= 0}
