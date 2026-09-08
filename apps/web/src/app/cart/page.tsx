@@ -14,7 +14,7 @@ import {
   subscribeCart,
   updateCartQty,
   type CartItem,
-  PayPalButton,
+  CheckoutModal,
   type PayPalStatus,
 } from "@/features/cart";
 import { AuthenticatedOnly, getToken } from "@/features/auth";
@@ -29,21 +29,6 @@ function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error && error.message.trim() ? error.message : fallback;
 }
 
-function getCheckoutStatusLabel(status: PayPalStatus) {
-  const labels: Record<PayPalStatus, string> = {
-    idle: "Listo para iniciar",
-    loading: "Cargando PayPal Sandbox",
-    ready: "Listo para pagar",
-    approving: "Esperando aprobación",
-    capturing: "Capturando pago",
-    registering: "Registrando pedido",
-    completed: "Pago completado",
-    cancelled: "Pago cancelado",
-    error: "No completado",
-  };
-  return labels[status];
-}
-
 export default function CartPage() {
   const router = useRouter();
   const [items, setItems] = useState<CartItem[]>([]);
@@ -53,7 +38,6 @@ export default function CartPage() {
   const [checkoutStatus, setCheckoutStatus] = useState<PayPalStatus>("idle");
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -74,7 +58,6 @@ export default function CartPage() {
 
   function handleConfirm() {
     setError(null);
-    setSuccess(null);
     const token = getToken();
     if (!token) {
       router.push("/login?next=/cart");
@@ -107,8 +90,7 @@ export default function CartPage() {
       }
       clearCart();
       setCheckoutOpen(false);
-      setSuccess(`Pedido #${orderId} registrado como pendiente.`);
-      router.push(`/orders/${orderId}`);
+      router.push(`/orders/${orderId}?purchase=success`);
     } catch (captureError: unknown) {
       const details = getErrorMessage(captureError, "Error desconocido del servidor");
       throw new Error(`El pago fue capturado, pero no se pudo registrar el pedido. ${details}`);
@@ -150,7 +132,6 @@ export default function CartPage() {
           </div>
 
           <DisclaimerBanner compact />
-          {success ? <div className="mt-5 rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-4 text-sm text-emerald-200" role="status">{success}</div> : null}
           {error ? <div className="mt-5 rounded-xl border border-red-400/20 bg-red-400/10 p-4 text-sm text-red-200" role="alert">{error}</div> : null}
 
           {items.length === 0 ? (
@@ -205,21 +186,13 @@ export default function CartPage() {
                   <p className="mt-2 text-xs leading-5 text-white/40">El subtotal es el importe que se enviará a PayPal Sandbox. No incluye cargos adicionales.</p>
                   <div className="mt-5 flex flex-col gap-3"><button type="button" disabled={checkoutOpen || checkoutBusy} className="rounded-xl border border-white/15 px-4 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40" onClick={() => clearCart()}>Vaciar carrito</button><button type="button" disabled={checkoutOpen || checkoutBusy} className="neon-btn rounded-xl px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50" onClick={handleConfirm}>{checkoutBusy ? "Procesando..." : "Confirmar compra"}</button></div>
 
-                  {checkoutOpen ? (
-                    <div className="mt-6 border-t border-[#baff2e]/20 pt-5" aria-labelledby="checkout-title">
-                      <div className="flex items-start justify-between gap-3"><div><h3 id="checkout-title" className="font-bold text-white">Pagar con PayPal</h3><p className="mt-1 text-xs text-white/45">Entorno Sandbox · solo pruebas</p></div><span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2 py-1 text-[10px] font-bold text-amber-200">SANDBOX</span></div>
-                      <p className="mt-4 text-sm font-semibold text-white">Importe: {formatAmount(checkoutSubtotal)}</p>
-                      <p className="mt-2 text-xs text-white/60" role="status" aria-live="polite">Estado: <span className="text-[#baff2e]">{getCheckoutStatusLabel(checkoutStatus)}</span></p>
-                      <div className="mt-4"><PayPalButton amount={checkoutSubtotal} currency={PAYPAL_CURRENCY} onCapture={handleCapture} onCancel={handlePaymentCancel} onError={handlePaymentError} onStatusChange={setCheckoutStatus} /></div>
-                      <button type="button" disabled={checkoutBusy} className="mt-4 text-xs text-white/50 underline-offset-4 transition hover:text-white hover:underline disabled:cursor-not-allowed disabled:opacity-40" onClick={closeCheckout}>Volver al carrito</button>
-                    </div>
-                  ) : null}
                 </GlassCard>
                 <p className="mt-4 text-center text-xs leading-5 text-white/35">El pedido se registra únicamente después de capturar el pago Sandbox. Debes iniciar sesión.</p>
               </aside>
             </div>
           )}
         </div>
+        <CheckoutModal open={checkoutOpen} items={checkoutItems} subtotal={checkoutSubtotal} currency={PAYPAL_CURRENCY} status={checkoutStatus} busy={checkoutBusy} error={error} onClose={closeCheckout} onCapture={handleCapture} onCancel={handlePaymentCancel} onError={handlePaymentError} onStatusChange={setCheckoutStatus} />
       </main>
     </AuthenticatedOnly>
   );

@@ -35,7 +35,7 @@ function PanelCard({
 }) {
   return (
     <div
-      className={`rounded-[1.75rem] md:rounded-[2rem] p-7 md:p-9 border backdrop-blur-xl relative overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.05)] ${gradientClass} ${className}`}
+      className={`rounded-[1.75rem] md:rounded-[2rem] min-w-0 p-7 md:p-9 border backdrop-blur-xl relative overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.05)] ${gradientClass} ${className}`}
     >
       {children}
     </div>
@@ -66,7 +66,7 @@ const WARNING_ICONS = [
 
 export default function SupplementDetailPanels({ benefits, protocol, warnings }: Props) {
   return (
-    <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16 md:py-20 relative z-20">
+    <div className="max-w-7xl mx-auto w-full min-w-0 px-4 sm:px-6 lg:px-12 py-16 md:py-20 relative z-20">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6">
         {/* Beneficios — grid plano estilo referencia */}
         <PanelCard
@@ -74,13 +74,13 @@ export default function SupplementDetailPanels({ benefits, protocol, warnings }:
           gradientClass="panel-gradient-benefits"
         >
           <div className="absolute -right-20 -top-20 w-64 h-64 bg-[#baff2e]/15 blur-[100px] rounded-full pointer-events-none" />
-          <header className="flex items-center gap-3 mb-8 relative z-10">
+          <header className="flex min-w-0 items-center gap-3 mb-8 relative z-10">
             <SectionIcon>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
               </svg>
             </SectionIcon>
-            <h2 className="text-white font-black text-xl md:text-2xl tracking-tight uppercase">
+            <h2 className="min-w-0 text-white font-black text-xl md:text-2xl tracking-tight uppercase break-words">
               Beneficios
             </h2>
           </header>
@@ -89,10 +89,10 @@ export default function SupplementDetailPanels({ benefits, protocol, warnings }:
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 relative z-10">
               {benefits.map((b, i) => (
                 <article key={i} className="min-w-0">
-                  <h3 className="text-[#baff2e] text-[10px] md:text-[11px] font-black uppercase tracking-[0.18em] mb-2.5 leading-snug">
+                  <h3 className="text-[#baff2e] text-[10px] md:text-[11px] font-black uppercase tracking-[0.18em] mb-2.5 leading-snug break-words [overflow-wrap:anywhere]">
                     {b.title}
                   </h3>
-                  <p className="text-white/55 text-sm leading-relaxed">{b.desc}</p>
+                  <p className="text-white/55 text-sm leading-relaxed break-words [overflow-wrap:anywhere]">{b.desc}</p>
                 </article>
               ))}
             </div>
@@ -104,14 +104,14 @@ export default function SupplementDetailPanels({ benefits, protocol, warnings }:
         {/* Protocolo — timeline vertical con línea punteada */}
         <PanelCard className="lg:col-span-4 border-white/[0.08]" gradientClass="panel-gradient-protocol">
           <div className="absolute left-0 top-0 w-full h-24 bg-gradient-to-b from-[#baff2e]/[0.07] to-transparent pointer-events-none" />
-          <header className="flex items-center gap-3 mb-8 relative z-10">
+          <header className="flex min-w-0 items-center gap-3 mb-8 relative z-10">
             <SectionIcon>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
               </svg>
             </SectionIcon>
-            <h2 className="text-white font-black text-xl tracking-tight uppercase">Protocolo</h2>
+            <h2 className="min-w-0 text-white font-black text-xl tracking-tight uppercase break-words">Protocolo</h2>
           </header>
 
           {protocol.length > 0 ? (
@@ -126,10 +126,10 @@ export default function SupplementDetailPanels({ benefits, protocol, warnings }:
                     {p.step ?? String(i + 1).padStart(2, "0")}
                   </div>
                   <div className="pt-0.5 min-w-0">
-                    <h3 className="text-white font-black text-[11px] uppercase tracking-widest mb-1.5">
+                    <h3 className="text-white font-black text-[11px] uppercase tracking-widest mb-1.5 break-words [overflow-wrap:anywhere]">
                       {p.title}
                     </h3>
-                    <p className="text-white/45 text-xs leading-relaxed">{p.desc}</p>
+                    <p className="text-white/45 text-xs leading-relaxed break-words [overflow-wrap:anywhere]">{p.desc}</p>
                   </div>
                 </li>
               ))}
@@ -147,14 +147,14 @@ export default function SupplementDetailPanels({ benefits, protocol, warnings }:
       >
         <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/[0.04] via-transparent to-transparent pointer-events-none" />
         <div className="absolute right-0 top-0 w-48 h-48 bg-red-500/10 blur-[90px] rounded-full pointer-events-none" />
-        <header className="flex items-center gap-3 mb-7 relative z-10">
+        <header className="flex min-w-0 items-center gap-3 mb-7 relative z-10">
           <div className="h-11 w-11 rounded-full border border-red-400/30 bg-red-500/10 flex items-center justify-center text-red-300 shrink-0">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M12 9v4M12 17h.01" />
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
             </svg>
           </div>
-          <h2 className="text-white font-black text-xl md:text-2xl tracking-tight uppercase">
+          <h2 className="min-w-0 text-white font-black text-xl md:text-2xl tracking-tight uppercase break-words">
             Seguridad y restricciones
           </h2>
         </header>
@@ -167,7 +167,7 @@ export default function SupplementDetailPanels({ benefits, protocol, warnings }:
               return (
                 <div
                   key={i}
-                  className={`rounded-2xl p-5 border transition-colors flex flex-col items-center text-center min-h-[140px] relative overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ${
+                  className={`rounded-2xl min-w-0 p-5 border transition-colors flex flex-col items-center text-center min-h-[140px] relative overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ${
                     critical
                       ? "border-red-400/20 panel-subcard-alert"
                       : "border-white/[0.06] panel-subcard-lime hover:border-[#baff2e]/25"
@@ -183,13 +183,13 @@ export default function SupplementDetailPanels({ benefits, protocol, warnings }:
                     {icon}
                   </div>
                   <h3
-                    className={`text-[10px] font-black uppercase tracking-[0.15em] mb-2 leading-snug ${
+                    className={`text-[10px] font-black uppercase tracking-[0.15em] mb-2 leading-snug break-words [overflow-wrap:anywhere] ${
                       critical ? "text-red-400" : "text-white/90"
                     }`}
                   >
                     {w.title}
                   </h3>
-                  <p className="text-white/45 text-xs leading-relaxed">{w.desc}</p>
+                  <p className="text-white/45 text-xs leading-relaxed break-words [overflow-wrap:anywhere]">{w.desc}</p>
                 </div>
               );
             })}

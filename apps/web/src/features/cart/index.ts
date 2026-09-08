@@ -12,3 +12,4 @@ export {
 export type { CartItem } from "./utils/cart";
 export { default as PayPalButton } from "./components/PayPalButton";
 export type { PayPalStatus } from "./components/PayPalButton";
+export { default as CheckoutModal } from "./components/CheckoutModal";
