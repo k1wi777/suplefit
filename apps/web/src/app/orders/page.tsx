@@ -11,13 +11,20 @@ type Order = {
   id: number;
   estado: string;
   total: string;
-  created_at: string;
+  createdAt?: string | null;
 };
 
 const currency = process.env.NEXT_PUBLIC_PAYPAL_CURRENCY === "USD" ? "USD" : "COP";
 
 function formatAmount(amount: string) {
   return `${currency} ${Number(amount).toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatOrderDate(value: string | null | undefined) {
+  if (!value) return "Fecha no disponible";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Fecha no disponible";
+  return date.toLocaleDateString("es-CO", { day: "2-digit", month: "long", year: "numeric" });
 }
 
 function getStatusPresentation(status: string) {
@@ -65,7 +72,7 @@ export default function OrdersPage() {
             <GlassCard className="border border-white/10 p-8 text-center sm:p-12"><div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#baff2e]/10 text-2xl text-[#baff2e]">⌁</div><h2 className="mt-5 text-xl font-bold text-white">Aún no tienes pedidos</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-white/50">Cuando completes una compra en la tienda, aparecerá aquí con su estado y detalle.</p><Link href="/catalog" className="neon-btn mt-6 inline-flex rounded-full px-5 py-3 text-sm font-bold">Explorar catálogo</Link></GlassCard>
           ) : null}
 
-          {!loading && !error && orders.length > 0 ? <div className="grid gap-3">{orders.map((order) => { const status = getStatusPresentation(order.estado); return <Link key={order.id} href={`/orders/${order.id}`} className="group"><GlassCard className="card-hover border border-white/10 p-5 transition group-hover:border-[#baff2e]/35 sm:p-6"><div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><div className="flex flex-wrap items-center gap-3"><span className="text-lg font-bold text-white">Pedido #{order.id}</span><span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${status.tone}`}><span className={`h-1.5 w-1.5 rounded-full ${status.marker}`} />{status.label}</span></div><p className="mt-2 text-sm text-white/45">Realizado el {new Date(order.created_at).toLocaleDateString("es-CO", { day: "2-digit", month: "long", year: "numeric" })}</p></div><div className="flex items-center justify-between gap-6 sm:justify-end"><div className="text-left sm:text-right"><p className="text-xs uppercase tracking-wider text-white/35">Total</p><p className="mt-1 font-black text-[#baff2e]">{formatAmount(order.total)}</p></div><span className="text-xl text-white/30 transition group-hover:translate-x-1 group-hover:text-[#baff2e]" aria-hidden>→</span></div></div></GlassCard></Link>; })}</div> : null}
+          {!loading && !error && orders.length > 0 ? <div className="grid gap-3">{orders.map((order) => { const status = getStatusPresentation(order.estado); return <Link key={order.id} href={`/orders/${order.id}`} className="group"><GlassCard className="card-hover border border-white/10 p-5 transition group-hover:border-[#baff2e]/35 sm:p-6"><div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><div className="flex flex-wrap items-center gap-3"><span className="text-lg font-bold text-white">Pedido #{order.id}</span><span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${status.tone}`}><span className={`h-1.5 w-1.5 rounded-full ${status.marker}`} />{status.label}</span></div><p className="mt-2 text-sm text-white/45">Realizado el {formatOrderDate(order.createdAt)}</p></div><div className="flex items-center justify-between gap-6 sm:justify-end"><div className="text-left sm:text-right"><p className="text-xs uppercase tracking-wider text-white/35">Total</p><p className="mt-1 font-black text-[#baff2e]">{formatAmount(order.total)}</p></div><span className="text-xl text-white/30 transition group-hover:translate-x-1 group-hover:text-[#baff2e]" aria-hidden>→</span></div></div></GlassCard></Link>; })}</div> : null}
         </div>
       </main>
     </AuthenticatedOnly>

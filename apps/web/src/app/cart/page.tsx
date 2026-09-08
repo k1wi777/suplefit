@@ -135,7 +135,7 @@ export default function CartPage() {
           {error ? <div className="mt-5 rounded-xl border border-red-400/20 bg-red-400/10 p-4 text-sm text-red-200" role="alert">{error}</div> : null}
 
           {items.length === 0 ? (
-            <GlassCard className="mt-6 border border-white/10 p-10 text-center sm:p-16">
+            <GlassCard className="mt-6 border border-white/[0.09] bg-[#070a09]/95 p-10 text-center shadow-[0_24px_70px_rgba(0,0,0,0.5)] sm:p-16">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-[#baff2e]/20 bg-[#baff2e]/10 text-3xl text-[#baff2e]">✦</div>
               <h2 className="mt-5 text-xl font-bold text-white">Tu carrito está esperando algo</h2>
               <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-white/50">Añade suplementos desde el catálogo para ver aquí el resumen de tu compra.</p>
@@ -150,7 +150,7 @@ export default function CartPage() {
                 </div>
                 <div className="flex flex-col gap-3">
                   {items.map((item) => (
-                    <GlassCard key={item.supplementId} className="border border-white/10 p-4 transition hover:border-[#baff2e]/25 sm:p-5">
+                    <GlassCard key={item.supplementId} className="border border-white/[0.09] bg-[#070a09]/95 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.38)] transition hover:border-[#baff2e]/25 sm:p-5">
                       <div className="flex gap-4">
                         <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] sm:h-24 sm:w-24">
                           {item.imagenUrl ? (
@@ -179,7 +179,7 @@ export default function CartPage() {
               </section>
 
               <aside className="lg:sticky lg:top-6">
-                <GlassCard className="border border-[#baff2e]/20 bg-black/45 p-5 sm:p-6">
+                <GlassCard className="border border-[#baff2e]/20 bg-[#070a09]/95 p-5 shadow-[0_22px_60px_rgba(0,0,0,0.5)] sm:p-6">
                   <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-bold text-white">Resumen</h2><span className="rounded-full bg-[#baff2e]/10 px-3 py-1 text-xs font-bold text-[#baff2e]">{PAYPAL_CURRENCY}</span></div>
                   <div className="mt-5 space-y-3 border-b border-white/10 pb-5 text-sm"><div className="flex justify-between text-white/55"><span>Productos</span><span>{items.reduce((sum, item) => sum + item.cantidad, 0)} unidades</span></div><div className="flex justify-between text-white/55"><span>Subtotal</span><span className="font-semibold text-white">{formatAmount(subtotal)}</span></div></div>
                   <div className="mt-5 flex items-end justify-between gap-4"><span className="text-sm text-white/55">Total a pagar</span><span className="text-2xl font-black text-[#baff2e]">{formatAmount(subtotal)}</span></div>

@@ -73,7 +73,7 @@ export default function WeightUpdateSection({ token, pesoActual, onUpdated }: Pr
 
   return (
     <div className="flex flex-col gap-6">
-      <GlassCard className="p-8 rounded-[2.5rem] bg-[#111]/80 border-[#baff2e]/20">
+      <GlassCard className="rounded-[2.5rem] border-[#baff2e]/20 bg-[#070a09]/95 p-8 shadow-[0_24px_70px_rgba(0,0,0,0.5)]">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
           <div>
             <h2 className="text-white font-bold text-2xl">Actualizar peso</h2>

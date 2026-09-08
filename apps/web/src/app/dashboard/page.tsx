@@ -275,40 +275,43 @@ export default function DashboardPage() {
           </div>
 
           <section className="mt-4">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <span className="text-[#baff2e] text-[10px] font-black uppercase tracking-[0.2em]">
-                  Tu stack personalizado
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#baff2e]">
+                  Para acompañar tu proceso
                 </span>
-                <h2 className="text-white font-black text-3xl tracking-tight mt-1">
+                <h2 className="mt-1 text-3xl font-black tracking-tight text-white">
                   Productos recomendados
                 </h2>
-                <p className="text-white/50 text-sm mt-1">Según tu objetivo y nivel de actividad</p>
+                <p className="mt-1 text-sm text-white/50">Una selección para que explores con más claridad.</p>
               </div>
               <Link
                 href="/catalog"
-                className="text-[#baff2e] text-xs font-black uppercase tracking-widest hover:underline shrink-0"
+                className="shrink-0 text-xs font-black uppercase tracking-widest text-[#baff2e] hover:underline"
               >
-                Ver catálogo completo
+                Ver catálogo completo →
               </Link>
             </div>
 
-            <GlassCard className="p-5 mb-6 border border-white/10 rounded-[2rem]">
-              <h3 className="text-white font-bold text-sm mb-2">¿Cómo se generan?</h3>
-              {criterios ? (
-                <ul className="text-white/60 text-xs space-y-1 list-disc pl-4">
-                  {criterios.objetivoLabel ? <li>Objetivo: {criterios.objetivoLabel}</li> : null}
-                  {criterios.categorias.length ? (
-                    <li>Categorías consideradas: {criterios.categorias.join(", ")}</li>
-                  ) : null}
-                  <li>Orden por disponibilidad y precio — sin IA médica</li>
-                  {criterios.notas.map((n) => (
-                    <li key={n}>{n}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-white/50 text-xs">Cargando criterios...</p>
-              )}
+            <GlassCard className="relative mb-6 overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_0%_0%,rgba(186,255,46,0.1),transparent_45%),linear-gradient(145deg,rgba(255,255,255,0.05),rgba(7,9,8,0.94))] p-5 sm:p-6">
+              <div className="relative z-10 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#baff2e]/25 bg-[#baff2e]/10 text-[#baff2e]" aria-hidden>
+                    ✦
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white">Una selección pensada para ti</h3>
+                    <p className="mt-1 max-w-2xl text-xs leading-5 text-white/55">
+                      {criterios?.objetivoLabel
+                        ? `Tomamos como punto de partida tu objetivo de ${criterios.objetivoLabel.toLowerCase()} y la información de tu perfil.`
+                        : "Tomamos como punto de partida tu objetivo y la información de tu perfil."} Estas opciones son orientativas para ayudarte a comparar y explorar.
+                    </p>
+                  </div>
+                </div>
+                <span className="w-fit rounded-full border border-[#baff2e]/20 bg-[#baff2e]/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-[#baff2e]">
+                  Orientación personal
+                </span>
+              </div>
             </GlassCard>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
@@ -316,7 +319,7 @@ export default function DashboardPage() {
                 ? Array.from({ length: 3 }).map((_, i) => (
                     <div
                       key={i}
-                      className="rounded-[2rem] h-80 animate-pulse bg-white/5 border border-white/10"
+                      className="h-[390px] animate-pulse rounded-[2rem] border border-white/10 bg-white/5"
                     />
                   ))
                 : null}

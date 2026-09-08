@@ -198,7 +198,7 @@ export default function ProfilePage() {
            <div className="max-w-5xl mx-auto w-full min-w-0 flex flex-col gap-8 md:gap-12 animate-fade-in-up">
               
               {/* Top Header Card */}
-              <GlassCard className="min-w-0 p-5 sm:p-8 md:p-10 rounded-[2.5rem] bg-[#111]/80 border-white/5 relative overflow-hidden flex flex-col md:flex-row items-center gap-6 md:gap-8">
+              <GlassCard className="min-w-0 rounded-[2.5rem] border-white/5 bg-[#070a09]/95 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.5)] relative flex flex-col items-center gap-6 overflow-hidden sm:p-8 md:flex-row md:gap-8 md:p-10">
                  {/* Decorative background glow inside header */}
                  <div className="absolute -left-20 top-1/2 transform -translate-y-1/2 w-64 h-64 bg-[#baff2e]/10 blur-[80px] rounded-full pointer-events-none"></div>
 
@@ -251,7 +251,7 @@ export default function ProfilePage() {
               </GlassCard>
 
               {/* Physical Progression Canvas */}
-              <GlassCard className="min-w-0 p-5 sm:p-8 md:p-10 rounded-[2.5rem] bg-[#111]/80 border-white/5">
+              <GlassCard className="min-w-0 rounded-[2.5rem] border-white/5 bg-[#070a09]/95 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.5)] sm:p-8 md:p-10">
                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
                     <div className="min-w-0">
                       <h2 className="text-white font-bold text-xl md:text-2xl mb-1 break-words">Panel de Progresión Física</h2>
@@ -318,7 +318,7 @@ export default function ProfilePage() {
               <div className="grid min-w-0 grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                  
                  {/* Athlete Calibration (Profile Form) */}
-                 <GlassCard className="min-w-0 p-5 sm:p-8 rounded-[2.5rem] bg-[#111]/80 border-white/5 flex flex-col">
+                 <GlassCard className="min-w-0 rounded-[2.5rem] border-white/5 bg-[#070a09]/95 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.5)] flex flex-col sm:p-8">
                     <div className="mb-8">
                       <h2 className="text-white font-bold text-2xl break-words">Datos personales</h2>
                       <p className="text-white/50 text-xs mt-1 break-words">
@@ -443,7 +443,7 @@ export default function ProfilePage() {
                  </GlassCard>
 
                  {/* Access & Security */}
-                 <GlassCard className="min-w-0 p-5 sm:p-8 rounded-[2.5rem] bg-[#111]/80 border-white/5 flex flex-col">
+                 <GlassCard className="min-w-0 rounded-[2.5rem] border-white/5 bg-[#070a09]/95 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.5)] flex flex-col sm:p-8">
                     <div className="flex min-w-0 items-center gap-3 mb-8">
                       <div className="h-8 w-8 rounded-lg bg-[#baff2e]/20 text-[#baff2e] flex items-center justify-center border border-[#baff2e]/30">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
@@ -498,7 +498,7 @@ export default function ProfilePage() {
               </div>
 
               {/* Stack History */}
-              <GlassCard className="min-w-0 p-5 sm:p-8 md:p-10 rounded-[2.5rem] bg-[#111]/80 border-white/5">
+              <GlassCard className="min-w-0 rounded-[2.5rem] border-white/5 bg-[#070a09]/95 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.5)] sm:p-8 md:p-10">
                  <h2 className="text-white font-bold text-xl sm:text-2xl mb-8 break-words">Historial de Suplementación</h2>
 
                  {history.length > 0 ? (
