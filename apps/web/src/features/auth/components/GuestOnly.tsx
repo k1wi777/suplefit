@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { apiFetch } from "@/shared/lib/api";
 import { getSafeDestination, isAuthSession } from "@/shared/lib/auth-policy";
 import { clearToken, getToken } from "../utils/token";
 
 export default function GuestOnly({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -28,7 +27,8 @@ export default function GuestOnly({ children }: { children: React.ReactNode }) {
           if (active) setReady(true);
           return;
         }
-        router.replace(getSafeDestination(searchParams.get("next"), data.isAdmin ? "admin" : "user"));
+        const next = new URL(window.location.href).searchParams.get("next");
+        router.replace(getSafeDestination(next, data.isAdmin ? "admin" : "user"));
       })
       .catch(() => {
         clearToken();
@@ -37,7 +37,7 @@ export default function GuestOnly({ children }: { children: React.ReactNode }) {
     return () => {
       active = false;
     };
-  }, [router, searchParams]);
+  }, [router]);
 
   if (!ready) {
     return (
