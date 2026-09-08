@@ -22,10 +22,7 @@ import { AuthenticatedOnly, getToken } from "@/features/auth";
 const PAYPAL_CURRENCY = process.env.NEXT_PUBLIC_PAYPAL_CURRENCY === "USD" ? "USD" : "COP";
 
 function formatAmount(amount: number) {
-  return `${PAYPAL_CURRENCY} ${amount.toLocaleString("es-CO", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  return `${PAYPAL_CURRENCY} ${amount.toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -83,25 +80,18 @@ export default function CartPage() {
       router.push("/login?next=/cart");
       return;
     }
-
     const currentItems = getCart();
     if (currentItems.length === 0) return;
-
-    const currentSubtotal = getCartSubtotal();
     setCheckoutItems(currentItems.map((item) => ({ ...item })));
-    setCheckoutSubtotal(currentSubtotal);
+    setCheckoutSubtotal(getCartSubtotal());
     setCheckoutStatus("loading");
     setCheckoutOpen(true);
   }
 
   async function handleCapture() {
     const token = getToken();
-    if (!token) {
-      throw new Error("Tu sesión expiró. Inicia sesión de nuevo para registrar el pedido.");
-    }
-    if (checkoutItems.length === 0) {
-      throw new Error("El carrito ya no contiene artículos para registrar.");
-    }
+    if (!token) throw new Error("Tu sesión expiró. Inicia sesión de nuevo para registrar el pedido.");
+    if (checkoutItems.length === 0) throw new Error("El carrito ya no contiene artículos para registrar.");
 
     setConfirming(true);
     setError(null);
@@ -109,12 +99,7 @@ export default function CartPage() {
       const data = await apiFetch<{ order?: { id?: number } }>("/api/orders", {
         method: "POST",
         token,
-        body: {
-          items: checkoutItems.map((item) => ({
-            supplementId: item.supplementId,
-            cantidad: item.cantidad,
-          })),
-        },
+        body: { items: checkoutItems.map((item) => ({ supplementId: item.supplementId, cantidad: item.cantidad })) },
       });
       const orderId = data.order?.id;
       if (typeof orderId !== "number" || !Number.isInteger(orderId) || orderId <= 0) {
@@ -124,8 +109,8 @@ export default function CartPage() {
       setCheckoutOpen(false);
       setSuccess(`Pedido #${orderId} registrado como pendiente.`);
       router.push(`/orders/${orderId}`);
-    } catch (error: unknown) {
-      const details = getErrorMessage(error, "Error desconocido del servidor");
+    } catch (captureError: unknown) {
+      const details = getErrorMessage(captureError, "Error desconocido del servidor");
       throw new Error(`El pago fue capturado, pero no se pudo registrar el pedido. ${details}`);
     } finally {
       setConfirming(false);
@@ -138,10 +123,9 @@ export default function CartPage() {
     setError("Pago cancelado. Tu carrito se conserva y puedes reintentar cuando quieras.");
   }
 
-  function handlePaymentError(error: unknown) {
+  function handlePaymentError(paymentError: unknown) {
     setConfirming(false);
-    const message = getErrorMessage(error, "No se pudo completar el pago de prueba.");
-    setError(message);
+    setError(getErrorMessage(paymentError, "No se pudo completar el pago de prueba."));
   }
 
   function closeCheckout() {
@@ -153,160 +137,88 @@ export default function CartPage() {
 
   return (
     <AuthenticatedOnly allowAnonymous>
-      <main className="flex-1 px-4 py-10 min-h-screen bg-[#050505]">
-        <div className="mx-auto max-w-3xl flex flex-col gap-6">
-        <div>
-          <h1 className="text-white font-black text-3xl">Carrito de compra</h1>
-          <p className="text-white/60 text-sm mt-2">
-            Tus productos se guardan en este dispositivo hasta que confirmes la compra.
-          </p>
-        </div>
-
-        <DisclaimerBanner compact />
-
-        {success ? (
-          <div className="text-emerald-300 text-sm bg-emerald-400/10 border border-emerald-400/20 rounded-xl p-4">
-            {success}
-          </div>
-        ) : null}
-        {error ? (
-          <div className="text-red-300 text-sm bg-red-400/10 border border-red-400/20 rounded-xl p-4" role="alert">
-            {error}
-          </div>
-        ) : null}
-
-        {items.length === 0 ? (
-          <GlassCard className="p-8 text-center border border-white/10">
-            <p className="text-white/60">Tu carrito está vacío.</p>
-            <Link href="/catalog" className="inline-block mt-4 neon-btn rounded-full px-6 py-2 text-sm font-bold">
-              Ir al catálogo
-            </Link>
-          </GlassCard>
-        ) : (
-          <>
-            <div className="flex flex-col gap-4">
-              {items.map((item) => (
-                <GlassCard
-                  key={item.supplementId}
-                  className="p-4 flex gap-4 items-center border border-white/10"
-                >
-                  <div className="h-16 w-16 rounded-xl bg-white/5 overflow-hidden shrink-0">
-                    {item.imagenUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.imagenUrl} alt="" className="h-full w-full object-cover" />
-                    ) : null}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <Link
-                      href={`/supplements/${item.supplementId}`}
-                      className="text-white font-bold hover:text-[#baff2e] transition"
-                    >
-                      {item.nombre}
-                    </Link>
-                    <div className="text-white/50 text-sm mt-1">
-                      {formatAmount(item.precio)} c/u
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      disabled={checkoutOpen || confirming}
-                      className="h-8 w-8 rounded-lg bg-white/10 text-white disabled:opacity-40"
-                      onClick={() => updateCartQty(item.supplementId, item.cantidad - 1)}
-                    >
-                      −
-                    </button>
-                    <span className="text-white w-6 text-center">{item.cantidad}</span>
-                    <button
-                      type="button"
-                      disabled={checkoutOpen || confirming}
-                      className="h-8 w-8 rounded-lg bg-white/10 text-white disabled:opacity-40"
-                      onClick={() => updateCartQty(item.supplementId, item.cantidad + 1)}
-                    >
-                      +
-                    </button>
-                  </div>
-                  <div className="text-white font-semibold w-24 text-right">
-                    {formatAmount(item.precio * item.cantidad)}
-                  </div>
-                  <button
-                    type="button"
-                    disabled={checkoutOpen || confirming}
-                    className="text-white/40 hover:text-red-400 text-sm disabled:opacity-40"
-                    onClick={() => removeFromCart(item.supplementId)}
-                  >
-                    Quitar
-                  </button>
-                </GlassCard>
-              ))}
+      <main className="relative min-h-screen flex-1 overflow-hidden px-4 py-10 sm:py-14">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_90%_8%,rgba(186,255,46,0.1),transparent_28%)]" />
+        <div className="relative z-10 mx-auto max-w-6xl">
+          <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#baff2e]">Tu selección</p>
+              <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">Carrito de compra</h1>
+              <p className="mt-2 text-sm text-white/55">Revisa tus productos antes de confirmar tu compra.</p>
             </div>
+            <Link href="/catalog" className="text-sm font-semibold text-white/60 transition hover:text-[#baff2e]">← Seguir explorando</Link>
+          </div>
 
-            <GlassCard className="p-6 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <div className="text-white/50 text-xs uppercase tracking-widest">Subtotal ({PAYPAL_CURRENCY})</div>
-                <div className="text-white font-black text-2xl">{formatAmount(subtotal)}</div>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  type="button"
-                  disabled={checkoutOpen || confirming}
-                  className="rounded-full px-6 py-3 border border-white/20 text-white/80 text-sm hover:bg-white/5 disabled:opacity-40"
-                  onClick={() => clearCart()}
-                >
-                  Vaciar carrito
-                </button>
-                <button
-                  type="button"
-                  disabled={checkoutOpen || checkoutBusy}
-                  className="rounded-full neon-btn px-8 py-3 text-sm font-bold uppercase tracking-wide disabled:opacity-50"
-                  onClick={handleConfirm}
-                >
-                  {checkoutBusy ? "Procesando..." : "Confirmar compra"}
-                </button>
-              </div>
+          <DisclaimerBanner compact />
+          {success ? <div className="mt-5 rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-4 text-sm text-emerald-200" role="status">{success}</div> : null}
+          {error ? <div className="mt-5 rounded-xl border border-red-400/20 bg-red-400/10 p-4 text-sm text-red-200" role="alert">{error}</div> : null}
+
+          {items.length === 0 ? (
+            <GlassCard className="mt-6 border border-white/10 p-10 text-center sm:p-16">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-[#baff2e]/20 bg-[#baff2e]/10 text-3xl text-[#baff2e]">✦</div>
+              <h2 className="mt-5 text-xl font-bold text-white">Tu carrito está esperando algo</h2>
+              <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-white/50">Añade suplementos desde el catálogo para ver aquí el resumen de tu compra.</p>
+              <Link href="/catalog" className="neon-btn mt-6 inline-flex rounded-full px-6 py-3 text-sm font-bold">Ir al catálogo</Link>
             </GlassCard>
-
-            {checkoutOpen ? (
-              <GlassCard className="p-6 border border-[#baff2e]/30 flex flex-col gap-5">
-                <div>
-                  <div className="flex items-center justify-between gap-3">
-                    <h2 className="text-white font-bold text-xl">Pagar con PayPal Sandbox</h2>
-                    <span className="rounded-full bg-amber-300/10 border border-amber-300/30 px-3 py-1 text-amber-200 text-xs font-bold">
-                      SOLO PRUEBAS
-                    </span>
-                  </div>
-                  <p className="text-white/60 text-sm mt-2">
-                    Esta demostración usa PayPal Sandbox y no incluye validación server-side de producción.
-                  </p>
-                  <p className="text-white font-semibold mt-3">Total a pagar: {formatAmount(checkoutSubtotal)}</p>
-                  <p className="text-white/60 text-sm mt-2" role="status" aria-live="polite">
-                    Estado: {getCheckoutStatusLabel(checkoutStatus)}
-                  </p>
+          ) : (
+            <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.65fr)]">
+              <section aria-labelledby="cart-items-title">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h2 id="cart-items-title" className="text-lg font-bold text-white">Productos <span className="text-sm font-normal text-white/40">({items.length})</span></h2>
+                  <span className="text-xs uppercase tracking-wider text-white/35">Guardado en este dispositivo</span>
                 </div>
-                <PayPalButton
-                  amount={checkoutSubtotal}
-                  currency={PAYPAL_CURRENCY}
-                  onCapture={handleCapture}
-                  onCancel={handlePaymentCancel}
-                  onError={handlePaymentError}
-                  onStatusChange={setCheckoutStatus}
-                />
-                <button
-                  type="button"
-                  disabled={checkoutBusy}
-                  className="self-start rounded-full px-5 py-2 border border-white/20 text-white/70 text-sm hover:bg-white/5 disabled:opacity-40"
-                  onClick={closeCheckout}
-                >
-                  Volver al carrito
-                </button>
-              </GlassCard>
-            ) : null}
+                <div className="flex flex-col gap-3">
+                  {items.map((item) => (
+                    <GlassCard key={item.supplementId} className="border border-white/10 p-4 transition hover:border-[#baff2e]/25 sm:p-5">
+                      <div className="flex gap-4">
+                        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] sm:h-24 sm:w-24">
+                          {item.imagenUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.imagenUrl} alt={item.nombre} className="h-full w-full object-cover" />
+                          ) : <div className="flex h-full items-center justify-center text-2xl font-black text-[#baff2e]/70">SF</div>}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <Link href={`/supplements/${item.supplementId}`} className="font-bold text-white transition hover:text-[#baff2e]">{item.nombre}</Link>
+                          <p className="mt-1 text-xs text-white/45">Precio unitario · {formatAmount(item.precio)}</p>
+                          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex items-center rounded-lg border border-white/10 bg-black/20">
+                              <button type="button" disabled={checkoutOpen || confirming} aria-label={`Reducir cantidad de ${item.nombre}`} className="h-9 w-9 text-white/60 transition hover:text-[#baff2e] disabled:opacity-40" onClick={() => updateCartQty(item.supplementId, item.cantidad - 1)}>−</button>
+                              <span className="w-8 text-center text-sm font-semibold text-white" aria-label={`Cantidad: ${item.cantidad}`}>{item.cantidad}</span>
+                              <button type="button" disabled={checkoutOpen || confirming} aria-label={`Aumentar cantidad de ${item.nombre}`} className="h-9 w-9 text-white/60 transition hover:text-[#baff2e] disabled:opacity-40" onClick={() => updateCartQty(item.supplementId, item.cantidad + 1)}>+</button>
+                            </div>
+                            <button type="button" disabled={checkoutOpen || confirming} className="text-xs text-white/40 underline-offset-4 transition hover:text-red-300 hover:underline disabled:opacity-40" onClick={() => removeFromCart(item.supplementId)}>Quitar producto</button>
+                          </div>
+                        </div>
+                        <div className="hidden text-right sm:block"><p className="text-xs text-white/35">Importe</p><p className="mt-1 font-bold text-white">{formatAmount(item.precio * item.cantidad)}</p></div>
+                      </div>
+                      <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3 sm:hidden"><span className="text-xs text-white/35">Importe</span><span className="font-bold text-white">{formatAmount(item.precio * item.cantidad)}</span></div>
+                    </GlassCard>
+                  ))}
+                </div>
+              </section>
 
-            <p className="text-white/40 text-xs">
-              El pedido se registra solo después de capturar el pago Sandbox. Debes iniciar sesión.
-            </p>
-          </>
-        )}
+              <aside className="lg:sticky lg:top-6">
+                <GlassCard className="border border-[#baff2e]/20 bg-black/45 p-5 sm:p-6">
+                  <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-bold text-white">Resumen</h2><span className="rounded-full bg-[#baff2e]/10 px-3 py-1 text-xs font-bold text-[#baff2e]">{PAYPAL_CURRENCY}</span></div>
+                  <div className="mt-5 space-y-3 border-b border-white/10 pb-5 text-sm"><div className="flex justify-between text-white/55"><span>Productos</span><span>{items.reduce((sum, item) => sum + item.cantidad, 0)} unidades</span></div><div className="flex justify-between text-white/55"><span>Subtotal</span><span className="font-semibold text-white">{formatAmount(subtotal)}</span></div></div>
+                  <div className="mt-5 flex items-end justify-between gap-4"><span className="text-sm text-white/55">Total a pagar</span><span className="text-2xl font-black text-[#baff2e]">{formatAmount(subtotal)}</span></div>
+                  <p className="mt-2 text-xs leading-5 text-white/40">El subtotal es el importe que se enviará a PayPal Sandbox. No incluye cargos adicionales.</p>
+                  <div className="mt-5 flex flex-col gap-3"><button type="button" disabled={checkoutOpen || checkoutBusy} className="rounded-xl border border-white/15 px-4 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40" onClick={() => clearCart()}>Vaciar carrito</button><button type="button" disabled={checkoutOpen || checkoutBusy} className="neon-btn rounded-xl px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50" onClick={handleConfirm}>{checkoutBusy ? "Procesando..." : "Confirmar compra"}</button></div>
+
+                  {checkoutOpen ? (
+                    <div className="mt-6 border-t border-[#baff2e]/20 pt-5" aria-labelledby="checkout-title">
+                      <div className="flex items-start justify-between gap-3"><div><h3 id="checkout-title" className="font-bold text-white">Pagar con PayPal</h3><p className="mt-1 text-xs text-white/45">Entorno Sandbox · solo pruebas</p></div><span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2 py-1 text-[10px] font-bold text-amber-200">SANDBOX</span></div>
+                      <p className="mt-4 text-sm font-semibold text-white">Importe: {formatAmount(checkoutSubtotal)}</p>
+                      <p className="mt-2 text-xs text-white/60" role="status" aria-live="polite">Estado: <span className="text-[#baff2e]">{getCheckoutStatusLabel(checkoutStatus)}</span></p>
+                      <div className="mt-4"><PayPalButton amount={checkoutSubtotal} currency={PAYPAL_CURRENCY} onCapture={handleCapture} onCancel={handlePaymentCancel} onError={handlePaymentError} onStatusChange={setCheckoutStatus} /></div>
+                      <button type="button" disabled={checkoutBusy} className="mt-4 text-xs text-white/50 underline-offset-4 transition hover:text-white hover:underline disabled:cursor-not-allowed disabled:opacity-40" onClick={closeCheckout}>Volver al carrito</button>
+                    </div>
+                  ) : null}
+                </GlassCard>
+                <p className="mt-4 text-center text-xs leading-5 text-white/35">El pedido se registra únicamente después de capturar el pago Sandbox. Debes iniciar sesión.</p>
+              </aside>
+            </div>
+          )}
         </div>
       </main>
     </AuthenticatedOnly>

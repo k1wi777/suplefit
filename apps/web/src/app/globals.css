@@ -25,6 +25,15 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Foco consistente para navegar estas superficies glass con teclado. */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #baff2e;
+  outline-offset: 3px;
+}
+
 /* Fondo premium dark + brillos sutiles */
 @media (prefers-color-scheme: dark) {
   body {

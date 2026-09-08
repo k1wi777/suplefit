@@ -22,12 +22,13 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
 
   return (
-    <GlassCard className="w-full max-w-md relative z-10 border border-lime-300/20">
-      <h1 className="text-white font-black text-2xl">Iniciar sesión</h1>
-      <p className="text-white/60 mt-2 text-sm">Accede a tu dashboard, pedidos y recomendaciones.</p>
+    <GlassCard className="relative z-10 w-full max-w-md border border-[#baff2e]/20 bg-black/45 p-6 shadow-[0_30px_100px_rgba(0,0,0,0.5)] sm:p-8">
+      <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-[#baff2e]"><span className="h-2 w-2 rounded-full bg-[#baff2e] shadow-[0_0_14px_rgba(186,255,46,0.9)]" />Acceso seguro</div>
+      <h1 className="mt-4 text-3xl font-black tracking-tight text-white">Iniciar sesión</h1>
+      <p className="mt-2 text-sm leading-6 text-white/60">Accede a tu dashboard, pedidos y recomendaciones.</p>
 
       <form
-        className="mt-6 flex flex-col gap-4"
+        className="mt-7 flex flex-col gap-5"
         onSubmit={async (e) => {
           e.preventDefault();
           setError(null);
@@ -51,29 +52,31 @@ export default function LoginForm() {
         }}
       >
         <label className="flex flex-col gap-2">
-          <span className="text-white/70 text-sm">Correo</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-white/55">Correo</span>
           <input
-            className="rounded-xl bg-black/30 border border-white/10 text-white px-4 py-3 outline-none focus:border-emerald-400/40"
+            className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-[#baff2e]/60 focus:ring-2 focus:ring-[#baff2e]/10"
             value={correo}
             onChange={(e) => setCorreo(e.target.value)}
             type="email"
+            autoComplete="email"
             required
           />
         </label>
 
         <label className="flex flex-col gap-2">
-          <span className="text-white/70 text-sm">Contraseña</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-white/55">Contraseña</span>
           <div className="relative">
             <input
-              className="w-full rounded-xl bg-black/30 border border-white/10 text-white px-4 py-3 pr-12 outline-none focus:border-emerald-400/40"
+              className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 pr-12 text-white outline-none transition focus:border-[#baff2e]/60 focus:ring-2 focus:ring-[#baff2e]/10"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
               required
             />
             <button
               type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-white/50 transition hover:bg-white/10 hover:text-white"
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-white/50 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#baff2e]"
               aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
               onClick={() => setShowPassword((v) => !v)}
             >
@@ -94,17 +97,17 @@ export default function LoginForm() {
           </div>
         </label>
 
-        {error ? <div className="text-red-300 text-sm">{error}</div> : null}
+        {error ? <div className="rounded-xl border border-red-400/25 bg-red-400/10 p-3 text-sm text-red-200" role="alert">{error}</div> : null}
 
-        <button disabled={loading} className="mt-2 rounded-xl neon-btn px-4 py-3 transition" type="submit">
+        <button disabled={loading} className="mt-1 rounded-xl neon-btn px-4 py-3.5 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#baff2e] disabled:cursor-not-allowed disabled:opacity-50" type="submit" aria-disabled={loading}>
           {loading ? "Entrando..." : "Entrar"}
         </button>
 
-        <div className="text-white/60 text-sm flex justify-between items-center">
-          <a className="hover:text-white transition" href="/register">
+        <div className="flex items-center justify-between gap-3 text-sm text-white/60">
+          <a className="transition hover:text-[#baff2e]" href="/register">
             Crear cuenta
           </a>
-          <a className="hover:text-white transition" href="/catalog">
+          <a className="transition hover:text-[#baff2e]" href="/catalog">
             Ver catálogo
           </a>
         </div>
