@@ -43,10 +43,6 @@ yarn-error.log*
 next-env.d.ts
 
 # local documentation and planning artifacts
-/docs/
-/specs/
-/progress/
-/init.sh
-/AGENTS.md
-/agents
+.rei/
+AGENTS.md
 
